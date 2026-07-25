@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ViralVideoHub Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .card {
+      background: #1e293b;
+      padding: 2rem 3rem;
+      border-radius: 12px;
+    }
+    .ok { color: #4ade80; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>✅ Bot server is running</h1>
+    <p class="ok">This is just a static status page.</p>
+    <p>The actual bot logic lives at <code>/api/webhook</code> —
+       Telegram sends updates there directly, you don't need to open it.</p>
+  </div>
+</body>
+</html>
