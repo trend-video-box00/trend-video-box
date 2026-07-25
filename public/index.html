@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Trending Hub</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-body">
+
+  <header class="topbar">
+    <div class="brand">Trending <span>Hub</span></div>
+    <div class="user-chip" id="userChip">
+      <span id="userName">···</span>
+      <div class="avatar" id="avatar">?</div>
+    </div>
+  </header>
+
+  <main class="home-wrap">
+    <div class="balance-card">
+      <div class="balance-label">Total Balance</div>
+      <div class="balance-value">$<span id="balanceValue">0.00</span></div>
+      <div class="balance-hint">সর্বনিম্ন উইথড্র $2.00 — bKash / Nagad / Rocket</div>
+    </div>
+
+    <div class="quick-actions">
+      <a href="earn.html" class="quick-action">
+        <div class="qa-icon tasks">📋</div>
+        <span class="qa-label">Tasks</span>
+      </a>
+      <a href="videos.html" class="quick-action">
+        <div class="qa-icon videos">🎬</div>
+        <span class="qa-label">Videos</span>
+      </a>
+      <a href="refer.html" class="quick-action">
+        <div class="qa-icon refer">👥</div>
+        <span class="qa-label">Refer</span>
+      </a>
+      <a href="#" class="quick-action" id="withdrawOpenBtn">
+        <div class="qa-icon withdraw">🏦</div>
+        <span class="qa-label">Withdraw</span>
+      </a>
+    </div>
+
+    <div class="section-title">Watch &amp; Earn</div>
+    <div class="task-item">
+      <div class="task-info">
+        <div class="task-title">অ্যাড দেখে সরাসরি আয় করুন</div>
+        <div class="task-reward">$0.05 / ad</div>
+      </div>
+      <a href="earn.html" class="task-btn">যান</a>
+    </div>
+  </main>
+
+  <!-- Notification popup — shown once per session, with a haptic buzz -->
+  <div class="notif-overlay" id="notifOverlay" hidden>
+    <div class="notif-card">
+      <div class="notif-icon">🔔</div>
+      <div class="notif-title">Welcome to Trending Hub</div>
+      <div class="notif-text">
+        ভিডিও দেখুন, অ্যাড দেখে আয় করুন, আর ফ্রেন্ড রেফার করে বোনাস পান।
+        সর্বনিম্ন উইথড্র <b>$2.00</b>, প্রতি অ্যাডে <b>$0.05</b>।
+      </div>
+      <button class="notif-btn" id="notifCloseBtn">OK, বুঝেছি</button>
+    </div>
+  </div>
+
+  <!-- Withdraw modal -->
+  <div class="modal-overlay" id="withdrawOverlay" hidden>
+    <div class="modal-sheet">
+      <button class="modal-close" id="withdrawCloseBtn">✕</button>
+      <div class="modal-title">উইথড্র করুন</div>
+      <div class="field">
+        <label>পরিমাণ (USD, সর্বনিম্ন $2.00)</label>
+        <input type="number" id="withdrawAmount" step="0.01" min="2" placeholder="2.00" />
+      </div>
+      <div class="field">
+        <label>পেমেন্ট মেথড</label>
+        <select id="withdrawMethod" style="width:100%; background:#0f1712; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px; color:var(--text); font-size:13px;">
+          <option value="bKash">bKash</option>
+          <option value="Nagad">Nagad</option>
+          <option value="Rocket">Rocket</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>একাউন্ট নাম্বার</label>
+        <input type="text" id="withdrawAccount" placeholder="01XXXXXXXXX" />
+      </div>
+      <button class="admin-btn" id="withdrawSubmitBtn" style="width:100%;">সাবমিট করুন</button>
+      <div class="status-msg" id="withdrawStatus"></div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item active"><span class="nav-icon">🏠</span><span>Home</span></a>
+    <a href="videos.html" class="nav-item"><span class="nav-icon">🎬</span><span>Videos</span></a>
+    <a href="earn.html" class="nav-item"><span class="nav-icon">💰</span><span>Earn</span></a>
+    <a href="rank.html" class="nav-item"><span class="nav-icon">🏆</span><span>Rank</span></a>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>

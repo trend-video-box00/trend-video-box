@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Trending Hub — Admin</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body class="admin-body">
+
+  <div id="deniedState" class="denied" hidden>
+    এই পেজ শুধুমাত্র অ্যাডমিনের জন্য।
+  </div>
+
+  <div id="adminApp" hidden>
+    <h1 style="font-size:19px; margin-bottom:16px;">Trending Hub — Admin</h1>
+
+    <div class="admin-section">
+      <h2>নতুন ভিডিও পাবলিশ করুন</h2>
+      <div class="field">
+        <label>ভিডিও বেছে নিন (বটে যেগুলো পাঠিয়েছেন)</label>
+        <select id="pendingSelect"></select>
+      </div>
+      <div class="field">
+        <label>টাইটেল</label>
+        <input type="text" id="titleInput" placeholder="Episode 105 - এপিসোড ১০৫" />
+      </div>
+      <div class="field">
+        <label>থাম্বনেইল ইমেজ URL</label>
+        <input type="text" id="thumbInput" placeholder="https://..." />
+      </div>
+      <button class="admin-btn" id="publishBtn">পাবলিশ করুন</button>
+      <div class="status-msg" id="publishStatus"></div>
+    </div>
+
+    <div class="admin-section">
+      <h2>সব ইউজারকে মেসেজ পাঠান</h2>
+      <div class="field">
+        <label>মেসেজ</label>
+        <textarea id="broadcastText" placeholder="আপনার মেসেজ লিখুন..."></textarea>
+      </div>
+      <div class="field">
+        <label>ইমেজ URL (ঐচ্ছিক)</label>
+        <input type="text" id="broadcastImage" placeholder="https://... (না দিলে খালি রাখুন)" />
+      </div>
+      <div style="font-size:11.5px; color:var(--text-dim); margin-bottom:10px;">
+        প্রতিটা মেসেজের সাথে "Open Trending Hub" বাটন অটোমেটিক যোগ হবে, যেটাতে ক্লিক করলে বটে ফিরে আসবে।
+      </div>
+      <button class="admin-btn" id="broadcastBtn">পাঠান</button>
+      <div class="status-msg" id="broadcastStatus"></div>
+    </div>
+
+    <div class="admin-section">
+      <h2>নতুন টাস্ক যোগ করুন</h2>
+      <div class="field">
+        <label>টাইটেল</label>
+        <input type="text" id="taskTitle" placeholder="আমাদের চ্যানেল জয়েন করুন" />
+      </div>
+      <div class="field">
+        <label>লিংক</label>
+        <input type="text" id="taskLink" placeholder="https://..." />
+      </div>
+      <div class="field">
+        <label>রিওয়ার্ড (USD)</label>
+        <input type="number" id="taskReward" step="0.01" placeholder="0.10" />
+      </div>
+      <button class="admin-btn" id="addTaskBtn">টাস্ক যোগ করুন</button>
+      <div class="status-msg" id="taskStatus"></div>
+      <div id="taskListAdmin" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="admin-section">
+      <h2>উইথড্র রিকোয়েস্টসমূহ</h2>
+      <div id="withdrawListAdmin"></div>
+    </div>
+
+    <div class="admin-section">
+      <h2>পাবলিশ করা ভিডিওসমূহ</h2>
+      <div id="videoList"></div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

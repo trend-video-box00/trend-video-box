@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Trending Hub</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-body">
+  <header class="topbar">
+    <div class="brand">Trending <span>Hub</span></div>
+    <div class="user-chip" id="userChip">
+      <span id="userName">···</span>
+      <div class="avatar" id="avatar">?</div>
+    </div>
+  </header>
+  <div class="search-wrap">
+    <input class="search" type="text" id="searchInput" placeholder="মুভির নাম বা এপিসোড নাম দিয়ে সার্চ করুন" />
+  </div>
+  <main id="grid" class="grid">
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+    <div class="skeleton"></div>
+  </main>
+  <div class="empty-state" id="emptyState" hidden>
+    এখনো কোনো কনটেন্ট যোগ করা হয়নি। শীঘ্রই আসছে।
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></a>
+    <a href="videos.html" class="nav-item active"><span class="nav-icon">🎬</span><span>Videos</span></a>
+    <a href="earn.html" class="nav-item"><span class="nav-icon">💰</span><span>Earn</span></a>
+    <a href="rank.html" class="nav-item"><span class="nav-icon">🏆</span><span>Rank</span></a>
+  </nav>
+
+  <script src="videos.js"></script>
+</body>
+</html>
