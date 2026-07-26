@@ -145,9 +145,43 @@ function showOneAd() {
   });
 }
 
+// Ad #5 (the last one) is a plain direct link instead of the Monetag SDK.
+// A direct link has no "reward completed" callback, so we open it and treat
+// it as watched once the person comes back to this tab/app.
+const DIRECT_LINK_AD_URL = 'https://omg10.com/4/11256528';
+
+function showDirectLinkAd() {
+  return new Promise((resolve) => {
+    if (tg?.openLink) {
+      tg.openLink(DIRECT_LINK_AD_URL, { try_instant_view: false });
+    } else {
+      window.open(DIRECT_LINK_AD_URL, '_blank', 'noopener');
+    }
+
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+      resolve();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') finish();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+  });
+}
+
 function watchOneAd() {
   showAdLoading();
-  showOneAd()
+  // watchedCount is 0-indexed going in: 0,1,2,3 are Monetag ads (ads 1-4),
+  // watchedCount === 4 means this is the 5th/last ad -> direct link.
+  const isFinalAd = watchedCount === ADS_REQUIRED - 1;
+  const adPromise = isFinalAd ? showDirectLinkAd() : showOneAd();
+
+  adPromise
     .then(() => {
       watchedCount += 1;
       if (watchedCount >= ADS_REQUIRED) {
