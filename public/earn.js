@@ -10,6 +10,11 @@ const taskList = document.getElementById('taskList');
 
 let adsLimit = 20;
 
+// --- Adsgram setup ---
+const AdController = window.Adsgram
+  ? window.Adsgram.init({ blockId: '39829' })
+  : null;
+
 async function loadEarnState() {
   try {
     const res = await fetch(`/api/earn?initData=${encodeURIComponent(tg?.initData || '')}`);
@@ -91,11 +96,13 @@ async function claimTask(taskId) {
 
 function showOneRichAd() {
   return new Promise((resolve, reject) => {
-    if (!window.TelegramAdsController || typeof window.TelegramAdsController.triggerInterstitial !== 'function') {
+    if (!AdController) {
       reject(new Error('Ad SDK not ready'));
       return;
     }
-    window.TelegramAdsController.triggerInterstitial().then(resolve).catch(reject);
+    AdController.show()
+      .then((result) => resolve(result))
+      .catch((result) => reject(result));
   });
 }
 
