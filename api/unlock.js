@@ -5,41 +5,41 @@
 // initData (so we know the real user id, not something the client can fake),
 // enforces the 24h re-lock, then sends the video to the user's chat via the
 // bot and records the unlock.
-
+//
+// Also schedules the sent video message for auto-deletion 5 minutes later.
+// NOTE: this only WRITES the schedule to the DB — the actual deletion is
+// performed by a separate cron endpoint (see api/delete-scheduled.js),
+// because a Vercel serverless function cannot just `setTimeout` for 5
+// minutes and stay alive to run it.
 const { getDb } = require('../lib/db');
 const { sendVideo, verifyInitData } = require('../lib/telegram');
 const { ObjectId } = require('mongodb');
-
 const LOCK_HOURS = 24;
+const AUTO_DELETE_MINUTES = 5;
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
-
   try {
     const { videoId, initData } = req.body || {};
-
     const user = verifyInitData(initData);
     if (!user) {
       res.status(401).json({ error: 'Could not verify Telegram user' });
       return;
     }
     const userId = user.id;
-
     if (!videoId || !ObjectId.isValid(videoId)) {
       res.status(400).json({ error: 'Invalid videoId' });
       return;
     }
-
     const db = await getDb();
     const video = await db.collection('videos').findOne({ _id: new ObjectId(videoId), published: true });
     if (!video) {
       res.status(404).json({ error: 'Video not found' });
       return;
     }
-
     // Enforce 24h re-lock per user per video.
     const existing = await db.collection('unlocks').findOne({ userId, videoId: videoId });
     if (existing) {
@@ -52,13 +52,32 @@ module.exports = async (req, res) => {
     }
 
     // Send the video into the user's chat with the bot.
-    await sendVideo(userId, video.telegramFileId, `🎬 ${video.title}`);
+    // sendVideo is expected to return the raw Telegram API response, which
+    // includes result.message_id — needed below to schedule deletion.
+    // *** If lib/telegram.js's sendVideo does not currently return this,
+    // *** it needs a small update (see the message accompanying this file).
+    const sentMessage = await sendVideo(userId, video.telegramFileId, `🎬 ${video.title}`);
+    const sentMessageId = sentMessage?.result?.message_id || sentMessage?.message_id || null;
 
     await db.collection('unlocks').updateOne(
       { userId, videoId: videoId },
       { $set: { userId, videoId, unlockedAt: new Date() } },
       { upsert: true }
     );
+
+    // Schedule auto-deletion 5 minutes from now (actual deletion happens in
+    // the cron endpoint, api/delete-scheduled.js).
+    if (sentMessageId) {
+      await db.collection('scheduledDeletions').insertOne({
+        chatId: userId,
+        messageId: sentMessageId,
+        videoId,
+        deleteAt: new Date(Date.now() + AUTO_DELETE_MINUTES * 60 * 1000),
+        done: false,
+      });
+    } else {
+      console.warn('unlock.js: could not determine sent message_id, auto-delete not scheduled for user', userId);
+    }
 
     res.status(200).json({ success: true });
   } catch (err) {
