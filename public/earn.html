@@ -5,15 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Trending Hub</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<!-- Same reward-ad SDK used on the video watch-gate. -->
-<script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
-<script>
-  window.TelegramAdsController = new TelegramAdsController();
-  window.TelegramAdsController.initialize({
-    pubId: "1017787",
-    appId: "8129",
-  });
-</script>
+<!-- Ad SDK tag removed. Paste your new ad network's SDK <script> tag(s)
+     here, and set window.TelegramAdsController (or whatever object your
+     new provider uses) the same way it was wired in earn.js. -->
 <link rel="stylesheet" href="style.css" />
 </head>
 <body class="page-body">
@@ -21,7 +15,6 @@
     <div class="brand">Trending <span>Hub</span></div>
     <div class="user-chip"><span id="balanceChip">$0.00</span></div>
   </header>
-
   <main class="home-wrap">
     <div class="earn-card">
       <div class="earn-ad-icon">Ad</div>
@@ -32,18 +25,15 @@
       </div>
       <button class="watch-ad-btn" id="watchAdBtn">▶ Watch Ad Now</button>
     </div>
-
     <div class="section-title">Tasks — visit &amp; earn</div>
     <div id="taskList"></div>
   </main>
-
   <nav class="bottom-nav">
     <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></a>
     <a href="videos.html" class="nav-item"><span class="nav-icon">🎬</span><span>Videos</span></a>
     <a href="earn.html" class="nav-item active"><span class="nav-icon">💰</span><span>Earn</span></a>
     <a href="rank.html" class="nav-item"><span class="nav-icon">🏆</span><span>Rank</span></a>
   </nav>
-
   <script src="earn.js"></script>
 </body>
 </html>
