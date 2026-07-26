@@ -1,70 +1,50 @@
-// public/watch.js — no ads, direct unlock
-const tg = window.Telegram?.WebApp;
-tg?.ready();
-tg?.expand();
-
-const BOT_USERNAME = 'viralvideohub009_bot';
-
-const params = new URLSearchParams(window.location.search);
-const videoId = params.get('id');
-
-const unlockCard = document.getElementById('unlockCard');
-const successState = document.getElementById('successState');
-const errorState = document.getElementById('errorState');
-const errorMsg = document.getElementById('errorMsg');
-const unlockBtn = document.getElementById('unlockBtn');
-
-function showError(msg) {
-  unlockCard.hidden = true;
-  successState.hidden = true;
-  errorState.hidden = false;
-  errorMsg.textContent = msg;
+/* New square-style watch page */
+.unlock-card-v2 {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 20px;
 }
-
-function showSuccess() {
-  unlockCard.hidden = true;
-  errorState.hidden = true;
-  successState.hidden = false;
+.wc-thumb-wrap {
+  width: 100%;
+  aspect-ratio: 1/1;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #1a241d;
+  margin-bottom: 16px;
+  box-shadow: 0 0 0 2px rgba(53,224,122,0.4);
 }
-
-async function completeUnlock() {
-  unlockBtn.disabled = true;
-  unlockBtn.textContent = 'ভিডিও পাঠানো হচ্ছে...';
-  try {
-    const res = await fetch('/api/unlock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId, initData: tg?.initData }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      if (res.status === 423) {
-        showError('এই ভিডিওটি এখনো লক করা আছে। ২৪ ঘণ্টা পর আবার চেষ্টা করুন।');
-      } else {
-        showError(data.error || 'সমস্যা হয়েছে, আবার চেষ্টা করুন।');
-      }
-      unlockBtn.disabled = false;
-      unlockBtn.textContent = '🔓 Unlock Video';
-      return;
-    }
-    showSuccess();
-  } catch (e) {
-    showError('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।');
-    unlockBtn.disabled = false;
-    unlockBtn.textContent = '🔓 Unlock Video';
-  }
+.wc-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wc-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 14px;
+  line-height: 1.4;
 }
-
-if (!videoId) {
-  showError('ভিডিও খুঁজে পাওয়া যায়নি।');
-} else {
-  unlockBtn.addEventListener('click', completeUnlock);
+.wc-progress-box {
+  display: inline-block;
+  background: #16201a;
+  border: 1px solid rgba(58,160,224,0.4);
+  border-radius: 999px;
+  padding: 6px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 12px;
 }
-
-document.getElementById('checkInboxBtn')?.addEventListener('click', () => {
-  if (!BOT_USERNAME.startsWith('REPLACE_') && tg?.openTelegramLink) {
-    tg.openTelegramLink(`https://t.me/${BOT_USERNAME}`);
-  } else {
-    tg?.close?.();
-  }
-});
+.wc-hint {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+.watch-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
