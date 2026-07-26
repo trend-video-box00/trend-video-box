@@ -55,10 +55,12 @@ function wait(ms) {
 
 // One fetch attempt for the video info. Throws on network error or "not found".
 async function fetchVideoInfo() {
+  const userId = tg?.initDataUnsafe?.user?.id || '';
   // cache-buster so a stale/incorrect cached response can't cause a false "not found"
-  const res = await fetch(`/api/videos?id=${encodeURIComponent(videoId)}&_ts=${Date.now()}`, {
-    cache: 'no-store',
-  });
+  const res = await fetch(
+    `/api/videos?id=${encodeURIComponent(videoId)}&userId=${encodeURIComponent(userId)}&_ts=${Date.now()}`,
+    { cache: 'no-store' }
+  );
   let data = null;
   try {
     data = await res.json();
