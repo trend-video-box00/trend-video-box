@@ -5,32 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Trending Hub</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<!-- Adsgram SDK. Replace BLOCK_ID in watch.js with your real Adsgram block id. -->
-<script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
-<script>
-  window.TelegramAdsController = new TelegramAdsController();
-  window.TelegramAdsController.initialize({
-    pubId: "1017787",
-    appId: "8129",
-  });
-</script>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body class="watch-body">
 
   <div id="unlockCard" class="unlock-card">
-    <div class="unlock-title"><span class="play-dot">▶</span> Watch 3 ads to unlock</div>
-    <div class="unlock-progress-track">
-      <div class="unlock-progress-fill" id="progressFill"></div>
-    </div>
-    <div class="unlock-progress-text" id="progressText">Progress: 0/3</div>
-    <button class="unlock-btn" id="unlockBtn">🔒 Unlock Video</button>
+    <div class="unlock-title"><span class="play-dot">▶</span> ভিডিওটি আনলক করুন</div>
+    <button class="unlock-btn" id="unlockBtn">🔓 Unlock Video</button>
   </div>
 
   <div id="successState" class="success-wrap" hidden>
     <div class="check-circle">✓</div>
     <div class="success-title">সফলভাবে সম্পন্ন হয়েছে!</div>
-    <div class="success-sub">অ্যাড দেখা সফল হয়েছে! ভিডিওটি পেতে ইনবক্স চেক করুন।</div>
+    <div class="success-sub">ভিডিওটি পেতে ইনবক্স চেক করুন।</div>
     <div class="note-lock">নোট: এই ভিডিওটি আগামী ২৪ ঘণ্টার জন্য লক করা হয়েছে।</div>
     <button class="primary-btn" id="checkInboxBtn">ইনবক্স চেক করুন</button>
   </div>
