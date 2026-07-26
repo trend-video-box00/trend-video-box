@@ -7,7 +7,6 @@ const ADS_REQUIRED = 5;
 const params = new URLSearchParams(window.location.search);
 const videoId = (params.get('id') || '').trim();
 
-const pageLoading = document.getElementById('pageLoading');
 const unlockCard = document.getElementById('unlockCard');
 const loadingState = document.getElementById('loadingState');
 const successState = document.getElementById('successState');
@@ -20,44 +19,40 @@ const wcProgressText = document.getElementById('wcProgressText');
 
 let watchedCount = 0;
 
-function hideAllStates() {
-  if (pageLoading) pageLoading.hidden = true;
+function showError(msg) {
   unlockCard.hidden = true;
   if (loadingState) loadingState.hidden = true;
   successState.hidden = true;
-  errorState.hidden = true;
-}
-function showError(msg) {
-  hideAllStates();
   errorState.hidden = false;
   errorMsg.textContent = msg;
 }
 function showSuccess() {
-  hideAllStates();
+  unlockCard.hidden = true;
+  if (loadingState) loadingState.hidden = true;
+  errorState.hidden = true;
   successState.hidden = false;
 }
 function showUnlockCard() {
-  hideAllStates();
+  if (loadingState) loadingState.hidden = true;
+  successState.hidden = true;
+  errorState.hidden = true;
   unlockCard.hidden = false;
 }
 function showAdLoading() {
-  hideAllStates();
+  unlockCard.hidden = true;
+  successState.hidden = true;
+  errorState.hidden = true;
   if (loadingState) loadingState.hidden = false;
-}
-function showPageLoading() {
-  hideAllStates();
-  if (pageLoading) pageLoading.hidden = false;
 }
 function updateProgress() {
   if (wcProgressText) wcProgressText.textContent = `Watch ${watchedCount}/${ADS_REQUIRED}`;
 }
 
-// Small helper: wait ms milliseconds
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Fetches /api/videos?id=... once. Throws on network error or "not found".
+// One fetch attempt for the video info. Throws on network error or "not found".
 async function fetchVideoInfo() {
   // cache-buster so a stale/incorrect cached response can't cause a false "not found"
   const res = await fetch(`/api/videos?id=${encodeURIComponent(videoId)}&_ts=${Date.now()}`, {
@@ -67,7 +62,6 @@ async function fetchVideoInfo() {
   try {
     data = await res.json();
   } catch (e) {
-    // response wasn't valid JSON — treat as a transient/server error, not "not found"
     throw new Error('bad_response');
   }
   if (!res.ok || !data || !data.video) {
@@ -77,12 +71,12 @@ async function fetchVideoInfo() {
 }
 
 // Loads the video's thumbnail/title/lock-status.
-// Retries once automatically before showing a final error, since a single
-// transient failure (cold start, slow DB, flaky network) shouldn't be
-// treated the same as a genuinely missing video.
+// The unlockCard box is already visible (with "Loading..." as the title) the
+// moment the page opens — same as before. This just fetches the real data
+// and fills it in. It retries once automatically before giving up, so a
+// single transient failure (cold start, slow DB, flaky network) doesn't
+// immediately show "video not found" before the ad flow even starts.
 async function loadVideoInfo() {
-  showPageLoading();
-
   let video = null;
   let lastErr = null;
 
