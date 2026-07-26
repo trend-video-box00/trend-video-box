@@ -44,8 +44,16 @@
         <label>ইমেজ URL (ঐচ্ছিক)</label>
         <input type="text" id="broadcastImage" placeholder="https://... (না দিলে খালি রাখুন)" />
       </div>
+      <div class="field">
+        <label>বাটন লিংক (ঐচ্ছিক — খালি রাখলে ডিফল্ট বট লিংক যাবে)</label>
+        <input type="text" id="broadcastButtonUrl" placeholder="https://t.me/viralvideohub009_bot/watch" />
+      </div>
+      <div class="field">
+        <label>বাটনের টেক্সট (ঐচ্ছিক)</label>
+        <input type="text" id="broadcastButtonText" placeholder="🎬 Watch Now" />
+      </div>
       <div style="font-size:11.5px; color:var(--text-dim); margin-bottom:10px;">
-        প্রতিটা মেসেজের সাথে "Open Trending Hub" বাটন অটোমেটিক যোগ হবে, যেটাতে ক্লিক করলে বটে ফিরে আসবে।
+        বাটন লিংক খালি রাখলে অটোমেটিক "Open Trending Hub" বাটন যাবে যেটা বটে ফিরিয়ে আনবে।
       </div>
       <button class="admin-btn" id="broadcastBtn">পাঠান</button>
       <div class="status-msg" id="broadcastStatus"></div>
