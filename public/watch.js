@@ -1,10 +1,9 @@
-// public/watch.js
+// public/watch.js — no ads, direct unlock
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
-const BOT_USERNAME = 'Drramabox24bd_bot';
-const ADS_REQUIRED = 3;
+const BOT_USERNAME = 'viralvideohub009_bot';
 
 const params = new URLSearchParams(window.location.search);
 const videoId = params.get('id');
@@ -13,11 +12,7 @@ const unlockCard = document.getElementById('unlockCard');
 const successState = document.getElementById('successState');
 const errorState = document.getElementById('errorState');
 const errorMsg = document.getElementById('errorMsg');
-const progressFill = document.getElementById('progressFill');
-const progressText = document.getElementById('progressText');
 const unlockBtn = document.getElementById('unlockBtn');
-
-let watchedCount = 0;
 
 function showError(msg) {
   unlockCard.hidden = true;
@@ -30,12 +25,6 @@ function showSuccess() {
   unlockCard.hidden = true;
   errorState.hidden = true;
   successState.hidden = false;
-}
-
-function updateProgress() {
-  const pct = (watchedCount / ADS_REQUIRED) * 100;
-  progressFill.style.width = `${pct}%`;
-  progressText.textContent = `Progress: ${watchedCount}/${ADS_REQUIRED}`;
 }
 
 async function completeUnlock() {
@@ -54,59 +43,22 @@ async function completeUnlock() {
       } else {
         showError(data.error || 'সমস্যা হয়েছে, আবার চেষ্টা করুন।');
       }
+      unlockBtn.disabled = false;
+      unlockBtn.textContent = '🔓 Unlock Video';
       return;
     }
     showSuccess();
   } catch (e) {
     showError('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    unlockBtn.disabled = false;
+    unlockBtn.textContent = '🔓 Unlock Video';
   }
-}
-
-// ---- RichAds ad call ----
-// Using RichAds' interstitial trigger as the per-click ad. If their exact
-// function name turns out to be different (check window.TelegramAdsController
-// in the browser console), only this function needs to change.
-function showOneRichAd() {
-  return new Promise((resolve, reject) => {
-    if (!window.TelegramAdsController || typeof window.TelegramAdsController.triggerInterstitial !== 'function') {
-      reject(new Error('RichAds SDK not ready'));
-      return;
-    }
-    window.TelegramAdsController.triggerInterstitial()
-      .then(resolve)
-      .catch(reject);
-  });
-}
-
-function watchOneAd() {
-  unlockBtn.disabled = true;
-  unlockBtn.textContent = 'অ্যাড লোড হচ্ছে...';
-
-  showOneRichAd()
-    .then(() => {
-      watchedCount += 1;
-      updateProgress();
-
-      if (watchedCount >= ADS_REQUIRED) {
-        completeUnlock();
-      } else {
-        unlockBtn.disabled = false;
-        unlockBtn.textContent = `🔒 Watch Ad ${watchedCount + 1}/${ADS_REQUIRED}`;
-      }
-    })
-    .catch((err) => {
-      console.error('Ad error:', err);
-      unlockBtn.disabled = false;
-      unlockBtn.textContent = '🔒 Unlock Video';
-      tg?.showAlert?.('অ্যাডটি সম্পূর্ণ দেখা হয়নি। আবার চেষ্টা করুন।');
-    });
 }
 
 if (!videoId) {
   showError('ভিডিও খুঁজে পাওয়া যায়নি।');
 } else {
-  updateProgress();
-  unlockBtn.addEventListener('click', watchOneAd);
+  unlockBtn.addEventListener('click', completeUnlock);
 }
 
 document.getElementById('checkInboxBtn')?.addEventListener('click', () => {
