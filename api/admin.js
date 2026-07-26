@@ -8,7 +8,7 @@
 //   POST { action: 'listVideos', initData }
 //   POST { action: 'deleteVideo', initData, videoId }
 // Broadcast:
-//   POST { action: 'broadcast', initData, text, imageUrl? }
+//   POST { action: 'broadcast', initData, text, imageUrl?, buttonUrl?, buttonText? }
 // Tasks:
 //   POST { action: 'listTasks', initData }
 //   POST { action: 'createTask', initData, title, link, reward }
@@ -100,18 +100,19 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // --- Broadcast (text + optional image, always includes an
-    // "Open Trending Hub" button pointing at the bot so recipients have a
-    // one-tap way back in) ---
+    // --- Broadcast (text + optional image + optional custom button.
+    // If buttonUrl is left empty, it falls back to a default
+    // "Open Trending Hub" button pointing at the bot.) ---
     if (action === 'broadcast') {
-      const { text, imageUrl } = req.body;
+      const { text, imageUrl, buttonUrl, buttonText } = req.body;
       if (!text) {
         res.status(400).json({ error: 'text is required' });
         return;
       }
       const users = await db.collection('users').find({}).project({ telegramId: 1 }).toArray();
-      const replyMarkup = BOT_USERNAME
-        ? { inline_keyboard: [[{ text: '🚀 Open Trending Hub', url: `https://t.me/${BOT_USERNAME}` }]] }
+      const finalButtonUrl = buttonUrl || (BOT_USERNAME ? `https://t.me/${BOT_USERNAME}` : null);
+      const replyMarkup = finalButtonUrl
+        ? { inline_keyboard: [[{ text: buttonText || '🚀 Open Trending Hub', url: finalButtonUrl }]] }
         : undefined;
 
       let sent = 0;
