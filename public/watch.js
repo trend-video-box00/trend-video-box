@@ -1,4 +1,4 @@
-// public/watch.js — 5-ad unlock flow with admin-configured ad network
+// public/watch.js — 5-ad unlock flow (Monetag)
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
@@ -17,7 +17,6 @@ const wcTitle = document.getElementById('wcTitle');
 const wcProgressText = document.getElementById('wcProgressText');
 
 let watchedCount = 0;
-let adConfig = null; // set by loadVideoInfo() from the admin-configured ad network
 
 function showError(msg) {
   unlockCard.hidden = true;
@@ -48,7 +47,7 @@ function updateProgress() {
   if (wcProgressText) wcProgressText.textContent = `Watch ${watchedCount}/${ADS_REQUIRED}`;
 }
 
-// Loads the video's thumbnail/title/lock-status, and the admin-configured ad network to use.
+// Loads the video's thumbnail/title/lock-status
 async function loadVideoInfo() {
   try {
     const res = await fetch(`/api/videos?id=${encodeURIComponent(videoId)}`);
@@ -60,7 +59,6 @@ async function loadVideoInfo() {
     const v = data.video;
     if (wcThumb) { wcThumb.src = v.thumbnailUrl; wcThumb.alt = v.title; }
     if (wcTitle) wcTitle.textContent = v.title;
-    adConfig = data.adConfig || null;
 
     if (v.lockedUntil && v.lockedUntil > Date.now()) {
       showError('এই ভিডিওটি এখনো লক করা আছে। ২৪ ঘণ্টা পর আবার চেষ্টা করুন।');
@@ -74,38 +72,15 @@ async function loadVideoInfo() {
   }
 }
 
-// Shows one ad using whatever network the admin configured — same network for every video.
+// Shows one Monetag rewarded interstitial ad (hardcoded — replaces adsgram/adConfig logic)
 function showOneAd() {
   return new Promise((resolve, reject) => {
-    if (!adConfig || !adConfig.type) {
-      reject(new Error('No ad network configured by admin yet.'));
+    const fnName = 'show_11415029';
+    if (typeof window[fnName] !== 'function') {
+      reject(new Error('Monetag SDK not loaded'));
       return;
     }
-    if (adConfig.type === 'adsgram') {
-      if (typeof window.Adsgram === 'undefined') {
-        reject(new Error('Adsgram SDK not loaded'));
-        return;
-      }
-      const AdController = window.Adsgram.init({ blockId: adConfig.blockId });
-      AdController.show().then(resolve).catch(reject);
-      return;
-    }
-    if (adConfig.type === 'monetag') {
-      const fnName = adConfig.functionName || 'show_9999999';
-      if (typeof window[fnName] !== 'function') {
-        reject(new Error('Monetag SDK not loaded'));
-        return;
-      }
-      window[fnName]().then(resolve).catch(reject);
-      return;
-    }
-    if (adConfig.type === 'link') {
-      if (tg?.openLink) tg.openLink(adConfig.url);
-      else window.open(adConfig.url, '_blank');
-      setTimeout(resolve, 3000);
-      return;
-    }
-    reject(new Error('Unknown ad type configured'));
+    window[fnName]().then(resolve).catch(reject);
   });
 }
 
