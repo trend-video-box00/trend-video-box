@@ -105,6 +105,8 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
 document.getElementById('broadcastBtn').addEventListener('click', async () => {
   const text = document.getElementById('broadcastText').value.trim();
   const imageUrl = document.getElementById('broadcastImage').value.trim();
+  const buttonUrl = document.getElementById('broadcastButtonUrl').value.trim();
+  const buttonText = document.getElementById('broadcastButtonText').value.trim();
   const statusEl = document.getElementById('broadcastStatus');
 
   if (!text) {
@@ -115,11 +117,18 @@ document.getElementById('broadcastBtn').addEventListener('click', async () => {
   statusEl.textContent = 'পাঠানো হচ্ছে...';
   statusEl.className = 'status-msg';
   try {
-    const result = await callAdmin('broadcast', { text, imageUrl: imageUrl || undefined });
+    const result = await callAdmin('broadcast', {
+      text,
+      imageUrl: imageUrl || undefined,
+      buttonUrl: buttonUrl || undefined,
+      buttonText: buttonText || undefined,
+    });
     statusEl.textContent = `পাঠানো হয়েছে ✅ (${result.sent}/${result.total})`;
     statusEl.className = 'status-msg ok';
     document.getElementById('broadcastText').value = '';
     document.getElementById('broadcastImage').value = '';
+    document.getElementById('broadcastButtonUrl').value = '';
+    document.getElementById('broadcastButtonText').value = '';
   } catch (e) {
     statusEl.textContent = 'সমস্যা হয়েছে: ' + e.message;
     statusEl.className = 'status-msg err';
