@@ -10,14 +10,57 @@
 <!-- Monetag SDK — Rewarded Interstitial -->
 <script src='//libtl.com/sdk.js' data-zone='11415029' data-sdk='show_11415029'></script>
 <link rel="stylesheet" href="style.css" />
+<style>
+  /* Thumbnail frame: fixed aspect ratio, no broken-image icon, shimmer while loading */
+  #unlockCard .wc-thumb-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #10241b;
+  }
+  #unlockCard .wc-thumb-wrap.skeleton {
+    background: linear-gradient(90deg, #10241b 25%, #16352a 37%, #10241b 63%);
+    background-size: 400% 100%;
+    animation: wc-shimmer 1.4s ease infinite;
+  }
+  @keyframes wc-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  #unlockCard .wc-thumb-wrap img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity .25s ease;
+  }
+  #unlockCard .wc-thumb-wrap img.loaded {
+    opacity: 1;
+  }
+  /* Title: shimmer bar while loading, replaced by real text once loaded */
+  #unlockCard .wc-title.skeleton {
+    display: inline-block;
+    width: 60%;
+    height: 1em;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #1c1c1c 25%, #2a2a2a 37%, #1c1c1c 63%);
+    background-size: 400% 100%;
+    animation: wc-shimmer 1.4s ease infinite;
+    color: transparent;
+  }
+</style>
 </head>
 <body class="watch-body">
 
   <div id="unlockCard" class="unlock-card-v2">
-    <div class="wc-thumb-wrap">
-      <img id="wcThumb" src="" alt="" />
+    <div class="wc-thumb-wrap skeleton" id="wcThumbWrap">
+      <img id="wcThumb" alt="" />
     </div>
-    <div class="wc-title" id="wcTitle">Loading...</div>
+    <div class="wc-title skeleton" id="wcTitle">&nbsp;</div>
     <div class="wc-progress-box">
       <span id="wcProgressText">Watch 0/5</span>
     </div>
