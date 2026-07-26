@@ -5,7 +5,9 @@ tg?.expand();
 const BOT_USERNAME = 'viralvideohub009_bot';
 const ADS_REQUIRED = 5;
 const params = new URLSearchParams(window.location.search);
-const videoId = params.get('id');
+const videoId = (params.get('id') || '').trim();
+
+const pageLoading = document.getElementById('pageLoading');
 const unlockCard = document.getElementById('unlockCard');
 const loadingState = document.getElementById('loadingState');
 const successState = document.getElementById('successState');
@@ -18,58 +20,107 @@ const wcProgressText = document.getElementById('wcProgressText');
 
 let watchedCount = 0;
 
-function showError(msg) {
+function hideAllStates() {
+  if (pageLoading) pageLoading.hidden = true;
   unlockCard.hidden = true;
   if (loadingState) loadingState.hidden = true;
   successState.hidden = true;
+  errorState.hidden = true;
+}
+function showError(msg) {
+  hideAllStates();
   errorState.hidden = false;
   errorMsg.textContent = msg;
 }
 function showSuccess() {
-  unlockCard.hidden = true;
-  if (loadingState) loadingState.hidden = true;
-  errorState.hidden = true;
+  hideAllStates();
   successState.hidden = false;
 }
 function showUnlockCard() {
-  if (loadingState) loadingState.hidden = true;
-  successState.hidden = true;
-  errorState.hidden = true;
+  hideAllStates();
   unlockCard.hidden = false;
 }
 function showAdLoading() {
-  unlockCard.hidden = true;
-  successState.hidden = true;
-  errorState.hidden = true;
+  hideAllStates();
   if (loadingState) loadingState.hidden = false;
+}
+function showPageLoading() {
+  hideAllStates();
+  if (pageLoading) pageLoading.hidden = false;
 }
 function updateProgress() {
   if (wcProgressText) wcProgressText.textContent = `Watch ${watchedCount}/${ADS_REQUIRED}`;
 }
 
-// Loads the video's thumbnail/title/lock-status
-async function loadVideoInfo() {
+// Small helper: wait ms milliseconds
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Fetches /api/videos?id=... once. Throws on network error or "not found".
+async function fetchVideoInfo() {
+  // cache-buster so a stale/incorrect cached response can't cause a false "not found"
+  const res = await fetch(`/api/videos?id=${encodeURIComponent(videoId)}&_ts=${Date.now()}`, {
+    cache: 'no-store',
+  });
+  let data = null;
   try {
-    const res = await fetch(`/api/videos?id=${encodeURIComponent(videoId)}`);
-    const data = await res.json();
-    if (!res.ok || !data.video) {
-      showError('ভিডিও খুঁজে পাওয়া যায়নি।');
-      return;
-    }
-    const v = data.video;
-    if (wcThumb) { wcThumb.src = v.thumbnailUrl; wcThumb.alt = v.title; }
-    if (wcTitle) wcTitle.textContent = v.title;
-
-    if (v.lockedUntil && v.lockedUntil > Date.now()) {
-      showError('এই ভিডিওটি এখনো লক করা আছে। ২৪ ঘণ্টা পর আবার চেষ্টা করুন।');
-      return;
-    }
-
-    updateProgress();
-    showUnlockCard();
+    data = await res.json();
   } catch (e) {
-    showError('ভিডিও লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    // response wasn't valid JSON — treat as a transient/server error, not "not found"
+    throw new Error('bad_response');
   }
+  if (!res.ok || !data || !data.video) {
+    throw new Error('not_found');
+  }
+  return data.video;
+}
+
+// Loads the video's thumbnail/title/lock-status.
+// Retries once automatically before showing a final error, since a single
+// transient failure (cold start, slow DB, flaky network) shouldn't be
+// treated the same as a genuinely missing video.
+async function loadVideoInfo() {
+  showPageLoading();
+
+  let video = null;
+  let lastErr = null;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      video = await fetchVideoInfo();
+      lastErr = null;
+      break;
+    } catch (e) {
+      lastErr = e;
+      if (attempt === 0) {
+        await wait(900); // brief pause before retry
+      }
+    }
+  }
+
+  if (lastErr || !video) {
+    showError('ভিডিও খুঁজে পাওয়া যায়নি।');
+    return;
+  }
+
+  if (wcThumb) {
+    wcThumb.alt = video.title || '';
+    wcThumb.onerror = () => {
+      wcThumb.onerror = null;
+      wcThumb.src = ''; // avoid broken-image icon; card still shows title/progress
+    };
+    wcThumb.src = video.thumbnailUrl || '';
+  }
+  if (wcTitle) wcTitle.textContent = video.title || '';
+
+  if (video.lockedUntil && video.lockedUntil > Date.now()) {
+    showError('এই ভিডিওটি এখনো লক করা আছে। ২৪ ঘণ্টা পর আবার চেষ্টা করুন।');
+    return;
+  }
+
+  updateProgress();
+  showUnlockCard();
 }
 
 // Shows one Monetag rewarded interstitial ad (hardcoded — replaces adsgram/adConfig logic)
