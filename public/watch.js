@@ -13,6 +13,7 @@ const successState = document.getElementById('successState');
 const errorState = document.getElementById('errorState');
 const errorMsg = document.getElementById('errorMsg');
 const unlockBtn = document.getElementById('unlockBtn');
+const wcThumbWrap = document.getElementById('wcThumbWrap');
 const wcThumb = document.getElementById('wcThumb');
 const wcTitle = document.getElementById('wcTitle');
 const wcProgressText = document.getElementById('wcProgressText');
@@ -71,11 +72,12 @@ async function fetchVideoInfo() {
 }
 
 // Loads the video's thumbnail/title/lock-status.
-// The unlockCard box is already visible (with "Loading..." as the title) the
-// moment the page opens — same as before. This just fetches the real data
-// and fills it in. It retries once automatically before giving up, so a
-// single transient failure (cold start, slow DB, flaky network) doesn't
-// immediately show "video not found" before the ad flow even starts.
+// The unlockCard box is visible from the start with a shimmer placeholder
+// (no literal "Loading..." text). Once data arrives, the real thumbnail
+// fades into the frame and the real title replaces the skeleton bar.
+// Retries once automatically before giving up, so a single transient
+// failure (cold start, slow DB, flaky network) doesn't immediately show
+// "video not found" before the ad flow even starts.
 async function loadVideoInfo() {
   let video = null;
   let lastErr = null;
@@ -98,15 +100,27 @@ async function loadVideoInfo() {
     return;
   }
 
+  // Fill in the thumbnail — fade it in once it actually loads, so the
+  // frame never shows a broken-image icon.
   if (wcThumb) {
-    wcThumb.alt = video.title || '';
+    wcThumb.classList.remove('loaded');
+    wcThumb.onload = () => {
+      wcThumb.classList.add('loaded');
+      if (wcThumbWrap) wcThumbWrap.classList.remove('skeleton');
+    };
     wcThumb.onerror = () => {
       wcThumb.onerror = null;
-      wcThumb.src = ''; // avoid broken-image icon; card still shows title/progress
+      if (wcThumbWrap) wcThumbWrap.classList.remove('skeleton');
     };
+    wcThumb.alt = video.title || '';
     wcThumb.src = video.thumbnailUrl || '';
   }
-  if (wcTitle) wcTitle.textContent = video.title || '';
+
+  // Fill in the title — replaces the shimmer bar.
+  if (wcTitle) {
+    wcTitle.classList.remove('skeleton');
+    wcTitle.textContent = video.title || '';
+  }
 
   if (video.lockedUntil && video.lockedUntil > Date.now()) {
     showError('এই ভিডিওটি এখনো লক করা আছে। ২৪ ঘণ্টা পর আবার চেষ্টা করুন।');
