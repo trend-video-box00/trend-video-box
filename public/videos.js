@@ -2,7 +2,6 @@
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
-
 const user = tg?.initDataUnsafe?.user;
 if (user) {
   document.getElementById('userName').textContent = user.first_name || user.username || 'User';
@@ -13,16 +12,14 @@ if (user) {
     avatarEl.textContent = (user.first_name || '?')[0].toUpperCase();
   }
 }
-
 const grid = document.getElementById('grid');
 const emptyState = document.getElementById('emptyState');
 const searchInput = document.getElementById('searchInput');
 let allVideos = [];
-
 async function loadVideos() {
   try {
     const userId = user?.id || '';
-    const res = await fetch(`/api/videos?userId=${userId}`);
+    const res = await fetch(`/api/videos?userId=${encodeURIComponent(userId)}`);
     const data = await res.json();
     allVideos = data.videos || [];
     render(allVideos);
@@ -30,7 +27,6 @@ async function loadVideos() {
     grid.innerHTML = '<div class="empty-state">লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।</div>';
   }
 }
-
 function render(videos) {
   grid.innerHTML = '';
   emptyState.hidden = videos.length !== 0;
@@ -58,22 +54,20 @@ function render(videos) {
         tg?.showAlert?.('এই ভিডিওটি আগামী ২৪ ঘণ্টার জন্য লক করা আছে।');
         return;
       }
-      window.location.href = `watch.html?id=${v.id}`;
+      // v.id is encoded in case it ever contains characters that break a query string
+      window.location.href = `watch.html?id=${encodeURIComponent(v.id)}`;
     });
     grid.appendChild(card);
   }
 }
-
 function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str || '';
   return d.innerHTML;
 }
-
 searchInput.addEventListener('input', () => {
   const q = searchInput.value.trim().toLowerCase();
   const filtered = allVideos.filter((v) => v.title.toLowerCase().includes(q));
   render(filtered);
 });
-
 loadVideos();
