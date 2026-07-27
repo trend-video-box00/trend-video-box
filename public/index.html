@@ -31,6 +31,40 @@
   .balance-value { font-size: 2rem; font-weight: 800; margin: 6px 0 4px; }
   .balance-hint { font-size: .72rem; opacity: .55; }
 
+  /* --- New: floating "+2 Video Free Unlock" badge --- */
+  .free-unlock-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 14px 0 4px;
+  }
+  .free-unlock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    text-decoration: none;
+    color: #fff;
+    font-size: .85rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff5a5a, #ff8a3d);
+    box-shadow: 0 0 18px rgba(255, 90, 90, 0.45), 0 4px 10px rgba(0,0,0,0.35);
+    animation: freeUnlockFloat 1.8s ease-in-out infinite;
+    white-space: nowrap;
+  }
+  .free-unlock-badge .fu-icon {
+    font-size: 1rem;
+    animation: freeUnlockSpin 2.4s ease-in-out infinite;
+  }
+  @keyframes freeUnlockFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes freeUnlockSpin {
+    0%, 100% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(-10deg) scale(1.15); }
+  }
+
   .quick-actions {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -79,6 +113,13 @@
       <div class="balance-label">Total Balance</div>
       <div class="balance-value">$<span id="balanceValue">0.00</span></div>
       <div class="balance-hint">সর্বনিম্ন উইথড্র $2.00 — bKash / Nagad / Rocket</div>
+    </div>
+
+    <div class="free-unlock-wrap">
+      <a href="videos.html" class="free-unlock-badge">
+        <span class="fu-icon">🔓</span>
+        <span>+2 Video Free Unlock</span>
+      </a>
     </div>
 
     <div class="quick-actions">
