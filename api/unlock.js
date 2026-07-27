@@ -1,9 +1,15 @@
 // api/unlock.js
-// POST /api/unlock  { videoId, initData }
+// POST /api/unlock  { videoId, initData, useFreeCredit }
 // Called by the frontend ONLY after the ad SDK reports the ad was actually
-// watched/completed (see public/watch.html). Verifies the Telegram WebApp
-// initData (so we know the real user id, not something the client can fake),
-// enforces the 24h re-lock, then sends the video to the user's chat via the
+// watched/completed (see public/watch.html) — UNLESS useFreeCredit is true,
+// in which case the frontend calls this directly (no ads needed) because
+// the user is spending one of their referral-earned free-unlock credits
+// (see api/refer.js / api/bot.js).
+//
+// Verifies the Telegram WebApp initData (so we know the real user id, not
+// something the client can fake), enforces the 24h re-lock (still applies
+// even when using a free credit — the credit only skips the ad requirement,
+// not the re-lock timer), then sends the video to the user's chat via the
 // bot and records the unlock.
 //
 // Also schedules the sent video message for auto-deletion 5 minutes later.
@@ -23,7 +29,7 @@ module.exports = async (req, res) => {
     return;
   }
   try {
-    const { videoId, initData } = req.body || {};
+    const { videoId, initData, useFreeCredit } = req.body || {};
     const user = verifyInitData(initData);
     if (!user) {
       res.status(401).json({ error: 'Could not verify Telegram user' });
@@ -40,7 +46,8 @@ module.exports = async (req, res) => {
       res.status(404).json({ error: 'Video not found' });
       return;
     }
-    // Enforce 24h re-lock per user per video.
+    // Enforce 24h re-lock per user per video — applies whether or not a
+    // free credit is used.
     const existing = await db.collection('unlocks').findOne({ userId, videoId: videoId });
     if (existing) {
       const unlockedAt = new Date(existing.unlockedAt).getTime();
@@ -51,17 +58,32 @@ module.exports = async (req, res) => {
       }
     }
 
+    let remainingFreeCredits = null;
+    if (useFreeCredit) {
+      // Atomic check-and-decrement: only succeeds if the user still has at
+      // least 1 credit at the moment of the update, so two rapid clicks
+      // can't both spend the same credit.
+      const creditResult = await db.collection('users').findOneAndUpdate(
+        { telegramId: userId, freeUnlockCredits: { $gte: 1 } },
+        { $inc: { freeUnlockCredits: -1 } },
+        { returnDocument: 'after' }
+      );
+      if (!creditResult.value) {
+        res.status(400).json({ error: 'আপনার কোনো ফ্রি ভিডিও credit নেই।' });
+        return;
+      }
+      remainingFreeCredits = creditResult.value.freeUnlockCredits;
+    }
+
     // Send the video into the user's chat with the bot.
     // sendVideo is expected to return the raw Telegram API response, which
     // includes result.message_id — needed below to schedule deletion.
-    // *** If lib/telegram.js's sendVideo does not currently return this,
-    // *** it needs a small update (see the message accompanying this file).
     const sentMessage = await sendVideo(userId, video.telegramFileId, `🎬 ${video.title}`);
     const sentMessageId = sentMessage?.result?.message_id || sentMessage?.message_id || null;
 
     await db.collection('unlocks').updateOne(
       { userId, videoId: videoId },
-      { $set: { userId, videoId, unlockedAt: new Date() } },
+      { $set: { userId, videoId, unlockedAt: new Date(), viaFreeCredit: !!useFreeCredit } },
       { upsert: true }
     );
 
@@ -79,7 +101,7 @@ module.exports = async (req, res) => {
       console.warn('unlock.js: could not determine sent message_id, auto-delete not scheduled for user', userId);
     }
 
-    res.status(200).json({ success: true });
+    res.status(200).json({ success: true, freeUnlockCredits: remainingFreeCredits });
   } catch (err) {
     console.error('unlock.js error:', err);
     res.status(500).json({ error: 'Server error' });
