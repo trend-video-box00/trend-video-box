@@ -7,6 +7,8 @@
 //   POST { action: 'publishVideo', initData, pendingUploadId, title, thumbnailUrl }
 //   POST { action: 'listVideos', initData }
 //   POST { action: 'deleteVideo', initData, videoId }
+// Thumbnail upload:
+//   POST { action: 'uploadThumbnail', initData, imageBase64 }
 // Broadcast:
 //   POST { action: 'broadcast', initData, text, imageUrl?, buttonUrl?, buttonText? }
 // Tasks:
@@ -20,9 +22,16 @@
 const { getDb } = require('../lib/db');
 const { verifyInitData, sendMessage, sendPhoto } = require('../lib/telegram');
 const { ObjectId } = require('mongodb');
+const cloudinary = require('cloudinary').v2;
 
 const ADMIN_ID = Number(process.env.ADMIN_TELEGRAM_ID || 0);
 const BOT_USERNAME = process.env.BOT_USERNAME || '';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 function requireAdmin(initData) {
   const user = verifyInitData(initData);
@@ -43,6 +52,26 @@ module.exports = async (req, res) => {
       return;
     }
     const db = await getDb();
+
+    // --- Thumbnail upload (Choose File -> gallery/PC -> Cloudinary URL) ---
+    if (action === 'uploadThumbnail') {
+      const { imageBase64 } = req.body;
+      if (!imageBase64 || typeof imageBase64 !== 'string' || !imageBase64.startsWith('data:image/')) {
+        res.status(400).json({ error: 'ছবি পাওয়া যায়নি' });
+        return;
+      }
+      try {
+        const uploadResult = await cloudinary.uploader.upload(imageBase64, {
+          folder: 'trending-hub/thumbnails',
+          resource_type: 'image',
+        });
+        res.status(200).json({ success: true, url: uploadResult.secure_url });
+      } catch (uploadErr) {
+        console.error('Cloudinary upload error:', uploadErr);
+        res.status(500).json({ error: 'ছবি আপলোড করতে সমস্যা হয়েছে' });
+      }
+      return;
+    }
 
     // --- Video ---
     if (action === 'pendingUploads') {
