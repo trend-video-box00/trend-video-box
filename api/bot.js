@@ -7,17 +7,16 @@ const { sendMessage } = require('../lib/telegram');
 const APP_URL = process.env.APP_URL; // e.g. https://your-project.vercel.app
 const ADMIN_ID = String(process.env.ADMIN_TELEGRAM_ID || '');
 
-// Referral milestone bonuses. Rewards the REFERRER for their own effort
+// Referral milestone rewards. Rewards the REFERRER for their own effort
 // (getting people to join) — never depends on what the referred user does
 // afterwards. Each tier is credited once per referrer, the moment their
 // referralCount reaches it.
-const REFERRAL_MILESTONES = [
-  { count: 5, bonus: 0.5 },
-  { count: 10, bonus: 1 },
-  { count: 25, bonus: 3 },
-  { count: 50, bonus: 7 },
-  { count: 100, bonus: 15 },
-];
+// Every 10 referrals, up to 100, grants 2 free video-unlock credits
+// (each credit skips the 5-ad requirement once — see api/unlock.js).
+const REFERRAL_MILESTONES = Array.from({ length: 10 }, (_, i) => ({
+  count: (i + 1) * 10, // 10, 20, 30, ... 100
+  freeVideos: 2,
+}));
 
 const WELCOME_TEXT =
   '<b>স্বাগতম Trending Hub এ</b> 🎬\n\n' +
@@ -38,17 +37,17 @@ async function creditReferralMilestones(db, referrerTelegramId) {
 
     await db.collection('users').updateOne(
       { telegramId: referrerTelegramId },
-      { $inc: { balance: tier.bonus } }
+      { $inc: { freeUnlockCredits: tier.freeVideos } }
     );
     await db.collection('referral_claims').insertOne({
       telegramId: referrerTelegramId,
       tier: tier.count,
-      bonus: tier.bonus,
+      freeVideos: tier.freeVideos,
       claimedAt: new Date(),
     });
     await sendMessage(
       referrerTelegramId,
-      `🎉 অভিনন্দন! আপনি <b>${tier.count} জন</b> রেফার করেছেন — আপনার একাউন্টে <b>$${tier.bonus.toFixed(2)}</b> বোনাস যোগ হয়েছে।`
+      `🎉 অভিনন্দন! আপনি <b>${tier.count} জন</b> রেফার করেছেন — আপনার একাউন্টে <b>+${tier.freeVideos} Videos Free</b> credit যোগ হয়েছে। এখন যেকোনো ভিডিও অ্যাড না দেখেই আনলক করতে পারবেন।`
     );
   }
 }
@@ -108,6 +107,7 @@ module.exports = async (req, res) => {
               balance: 0,
               referralCount: 0,
               referredBy: null,
+              freeUnlockCredits: 0,
             },
           },
           { upsert: true }
