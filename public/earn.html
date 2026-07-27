@@ -9,6 +9,24 @@
 <!-- Monetag SDK — Rewarded Interstitial -->
 <script src='//libtl.com/sdk.js' data-zone='11415029' data-sdk='show_11415029'></script>
 <link rel="stylesheet" href="style.css" />
+<style>
+  .earn-header { padding: 4px 4px 16px; }
+  .earn-header h2 { margin: 0 0 4px; font-size: 1.15rem; }
+  .earn-header p { margin: 0; font-size: .85rem; opacity: .7; }
+  .earn-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .earn-tab { flex: 1; padding: 10px; text-align: center; border-radius: 12px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,.05); }
+  .earn-tab.active { background: #ef4b4b; color: #fff; }
+  .network-card { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; background: rgba(255,255,255,.03); margin-bottom: 12px; }
+  .network-icon { width: 42px; height: 42px; border-radius: 10px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .network-info { flex: 1; min-width: 0; }
+  .network-name { font-weight: 600; font-size: .95rem; }
+  .network-name .reward { color: #ef4b4b; margin-left: 6px; }
+  .network-progress-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.08); margin-top: 8px; overflow: hidden; }
+  .network-progress-fill { height: 100%; background: #ef4b4b; width: 0%; }
+  .network-progress-text { font-size: .75rem; opacity: .6; margin-top: 4px; }
+  .network-watch-btn { padding: 10px 18px; border-radius: 999px; background: #ef4b4b; color: #fff; border: none; font-weight: 700; white-space: nowrap; }
+  .network-watch-btn:disabled { background: #444; opacity: .6; }
+</style>
 </head>
 <body class="page-body">
   <header class="topbar">
@@ -16,17 +34,26 @@
     <div class="user-chip"><span id="balanceChip">$0.00</span></div>
   </header>
   <main class="home-wrap">
-    <div class="earn-card">
-      <div class="earn-ad-icon">Ad</div>
-      <div class="earn-title">Watch Ads &amp; Earn</div>
-      <div class="earn-stat-row">
-        <div class="earn-stat">Per Ad: <b>$0.05</b></div>
-        <div class="earn-stat">Today: <b id="adsProgressText">0/20</b></div>
-      </div>
-      <button class="watch-ad-btn" id="watchAdBtn">▶ Watch Ad Now</button>
+    <div class="earn-header">
+      <h2>Watch ads to earn</h2>
+      <p>Each network has its own daily limit — watch them all for maximum earnings.</p>
     </div>
-    <div class="section-title">Tasks — visit &amp; earn</div>
-    <div id="taskList"></div>
+
+    <div class="earn-tabs">
+      <div class="earn-tab active" id="tabAds">Ads</div>
+      <div class="earn-tab" id="tabArticles">Articles</div>
+    </div>
+
+    <!-- Ad network cards (Adsgram Daily, Adsgram Special, Monetag, GigaPub)
+         are built dynamically in earn.js so quantities/rewards/progress can
+         be updated from one place without touching this HTML. -->
+    <div id="adsPanel">
+      <div id="networkList"></div>
+    </div>
+
+    <div id="articlesPanel" hidden>
+      <div id="taskList"></div>
+    </div>
   </main>
   <nav class="bottom-nav">
     <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></a>
