@@ -1,29 +1,58 @@
 // api/earn.js
-// GET  /api/earn?initData=...                -> wallet + today's ad count + task list
-// POST /api/earn { action:'watchAd', initData }                       -> credit one ad reward
-// POST /api/earn { action:'completeTask', initData, taskId }          -> credit one task reward (once per user)
+// GET  /api/earn?initData=...                                    -> wallet + today's per-network ad counts + task list
+// POST /api/earn { action:'watchAd', initData, network }         -> credit one ad reward for that network
+// POST /api/earn { action:'completeTask', initData, taskId }     -> credit one task reward (once per user)
 
 const { getDb } = require('../lib/db');
 const { verifyInitData } = require('../lib/telegram');
 const { ObjectId } = require('mongodb');
 
+// Same reward for every ad network, as requested — only the daily quantity
+// (limit) differs per network.
 const PER_AD_REWARD = 0.05;
-const DAILY_AD_LIMIT = 20;
+
+const NETWORK_CONFIG = {
+  adsgramDaily: { limit: 15 },
+  adsgramSpecial: { limit: 5 },
+  monetag: { limit: 20 }, // unchanged — this was the original DAILY_AD_LIMIT
+  gigapub: { limit: 20 },
+};
+const NETWORK_IDS = Object.keys(NETWORK_CONFIG);
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
 }
 
+// Makes sure user.networkAds has a { date, count } entry for every known
+// network, resetting any entry whose date isn't today. Also migrates the
+// old single adsToday/adDate fields (which used to represent Monetag only)
+// into networkAds.monetag the first time this runs for a user.
 async function ensureDailyReset(db, user) {
   const today = todayKey();
-  if (user.adDate !== today) {
+  const networkAds = { ...(user.networkAds || {}) };
+
+  // One-time migration from the old flat fields.
+  if (!networkAds.monetag && (user.adsToday !== undefined || user.adDate !== undefined)) {
+    networkAds.monetag = { date: user.adDate || today, count: user.adsToday || 0 };
+  }
+
+  let changed = false;
+  for (const id of NETWORK_IDS) {
+    const entry = networkAds[id];
+    if (!entry || entry.date !== today) {
+      networkAds[id] = { date: today, count: 0 };
+      changed = true;
+    }
+  }
+
+  if (changed || !user.networkAds) {
     await db.collection('users').updateOne(
       { telegramId: user.telegramId },
-      { $set: { adDate: today, adsToday: 0 } }
+      { $set: { networkAds } }
     );
-    return { ...user, adDate: today, adsToday: 0 };
   }
-  return user;
+
+  return { ...user, networkAds };
 }
 
 module.exports = async (req, res) => {
@@ -51,11 +80,18 @@ module.exports = async (req, res) => {
         .toArray();
       const completedIds = new Set(completions.map((c) => c.taskId.toString()));
 
+      const networks = {};
+      for (const id of NETWORK_IDS) {
+        networks[id] = {
+          reward: PER_AD_REWARD,
+          today: dbUser.networkAds[id].count,
+          limit: NETWORK_CONFIG[id].limit,
+        };
+      }
+
       res.status(200).json({
         balance: dbUser.balance || 0,
-        adsToday: dbUser.adsToday || 0,
-        adsLimit: DAILY_AD_LIMIT,
-        perAd: PER_AD_REWARD,
+        networks,
         tasks: tasks.map((t) => ({
           id: t._id,
           title: t.title,
@@ -71,20 +107,34 @@ module.exports = async (req, res) => {
       const { action } = req.body || {};
 
       if (action === 'watchAd') {
-        if ((dbUser.adsToday || 0) >= DAILY_AD_LIMIT) {
-          res.status(429).json({ error: 'আজকের অ্যাড দেখার লিমিট শেষ, কাল আবার আসুন', adsToday: dbUser.adsToday, adsLimit: DAILY_AD_LIMIT });
+        const { network } = req.body || {};
+        if (!network || !NETWORK_CONFIG[network]) {
+          res.status(400).json({ error: 'Invalid network' });
+          return;
+        }
+        const limit = NETWORK_CONFIG[network].limit;
+        const current = dbUser.networkAds[network].count;
+        if (current >= limit) {
+          res.status(429).json({
+            error: 'আজকের অ্যাড দেখার লিমিট শেষ, কাল আবার আসুন',
+            today: current,
+            limit,
+          });
           return;
         }
         await db.collection('users').updateOne(
           { telegramId: user.id },
-          { $inc: { balance: PER_AD_REWARD, adsToday: 1 } }
+          {
+            $inc: { balance: PER_AD_REWARD, [`networkAds.${network}.count`]: 1 },
+          }
         );
         const updated = await db.collection('users').findOne({ telegramId: user.id });
         res.status(200).json({
           success: true,
           balance: updated.balance,
-          adsToday: updated.adsToday,
-          adsLimit: DAILY_AD_LIMIT,
+          reward: PER_AD_REWARD,
+          today: updated.networkAds[network].count,
+          limit,
         });
         return;
       }
