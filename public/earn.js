@@ -12,13 +12,13 @@ const adsPanel = document.getElementById('adsPanel');
 const articlesPanel = document.getElementById('articlesPanel');
 
 // Card order = render order: Adsgram Daily, Adsgram Special, Monetag, GigaPub.
-// Fill in the two REPLACE_ placeholders with your real Adsgram block IDs.
+// Fill in the remaining REPLACE_ placeholder with your real Adsgram block ID.
 const NETWORKS = [
   {
     id: 'adsgramDaily',
     name: 'Adsgram Daily',
     icon: '⚡',
-    show: () => showAdsgramAd('REPLACE_ADSGRAM_DAILY_BLOCK_ID'),
+    show: () => showAdsgramAd('39958'),
   },
   {
     id: 'adsgramSpecial',
