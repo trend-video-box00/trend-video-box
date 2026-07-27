@@ -13,6 +13,7 @@ const successState = document.getElementById('successState');
 const errorState = document.getElementById('errorState');
 const errorMsg = document.getElementById('errorMsg');
 const unlockBtn = document.getElementById('unlockBtn');
+const freeCreditBtn = document.getElementById('freeCreditBtn');
 const wcThumbWrap = document.getElementById('wcThumbWrap');
 const wcThumb = document.getElementById('wcThumb');
 const wcTitle = document.getElementById('wcTitle');
@@ -47,6 +48,26 @@ function showAdLoading() {
 }
 function updateProgress() {
   if (wcProgressText) wcProgressText.textContent = `Watch ${watchedCount}/${ADS_REQUIRED}`;
+}
+
+// Checks how many free video-unlock credits (earned via referrals) the
+// user currently has, and shows/hides the "use free credit" button.
+async function loadFreeCredits() {
+  if (!freeCreditBtn) return;
+  try {
+    const res = await fetch(`/api/refer?initData=${encodeURIComponent(tg?.initData || '')}`);
+    const data = await res.json();
+    if (!res.ok) return;
+    const credits = data.freeUnlockCredits || 0;
+    if (credits > 0) {
+      freeCreditBtn.hidden = false;
+      freeCreditBtn.textContent = `🎁 Free Credit দিয়ে Unlock করুন (${credits} বাকি)`;
+    } else {
+      freeCreditBtn.hidden = true;
+    }
+  } catch (e) {
+    // Free-credit button just stays hidden if this fails — not critical.
+  }
 }
 
 function wait(ms) {
@@ -131,6 +152,7 @@ async function loadVideoInfo() {
 
   updateProgress();
   showUnlockCard();
+  loadFreeCredits();
 }
 
 // Shows one Monetag rewarded interstitial ad (hardcoded — replaces adsgram/adConfig logic)
@@ -198,13 +220,13 @@ function watchOneAd() {
     });
 }
 
-async function completeUnlock() {
+async function completeUnlock(useFreeCredit) {
   showAdLoading();
   try {
     const res = await fetch('/api/unlock', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId, initData: tg?.initData }),
+      body: JSON.stringify({ videoId, initData: tg?.initData, useFreeCredit: !!useFreeCredit }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -225,6 +247,7 @@ if (!videoId) {
   showError('ভিডিও খুঁজে পাওয়া যায়নি।');
 } else {
   unlockBtn.addEventListener('click', watchOneAd);
+  freeCreditBtn?.addEventListener('click', () => completeUnlock(true));
   loadVideoInfo();
 }
 document.getElementById('checkInboxBtn')?.addEventListener('click', () => {
