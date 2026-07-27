@@ -77,6 +77,53 @@ async function deleteVideo(videoId) {
   }
 }
 
+// --- Thumbnail file upload (Choose File -> gallery/PC -> Cloudinary) ---
+const thumbFileInput = document.getElementById('thumbFile');
+const thumbPreview = document.getElementById('thumbPreview');
+const thumbUploadStatus = document.getElementById('thumbUploadStatus');
+const thumbInput = document.getElementById('thumbInput');
+const publishBtn = document.getElementById('publishBtn');
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result); // "data:image/png;base64,...."
+    reader.onerror = () => reject(new Error('ফাইল পড়তে সমস্যা হয়েছে'));
+    reader.readAsDataURL(file);
+  });
+}
+
+thumbFileInput?.addEventListener('change', async () => {
+  const file = thumbFileInput.files?.[0];
+  if (!file) return;
+
+  // Instant local preview while it uploads
+  const localPreviewUrl = URL.createObjectURL(file);
+  thumbPreview.src = localPreviewUrl;
+  thumbPreview.classList.add('show');
+
+  thumbUploadStatus.textContent = 'আপলোড হচ্ছে...';
+  thumbUploadStatus.style.color = 'var(--text-dim)';
+  publishBtn.disabled = true;
+  thumbInput.value = '';
+
+  try {
+    const imageBase64 = await fileToBase64(file);
+    const { url } = await callAdmin('uploadThumbnail', { imageBase64 });
+    thumbInput.value = url;
+    thumbPreview.src = url;
+    thumbUploadStatus.textContent = 'আপলোড সম্পন্ন ✅';
+    thumbUploadStatus.style.color = 'var(--green-glow)';
+  } catch (e) {
+    thumbUploadStatus.textContent = 'আপলোড ব্যর্থ: ' + e.message;
+    thumbUploadStatus.style.color = '#ef4b4b';
+    thumbPreview.classList.remove('show');
+    thumbInput.value = '';
+  } finally {
+    publishBtn.disabled = false;
+  }
+});
+
 document.getElementById('publishBtn').addEventListener('click', async () => {
   const pendingUploadId = document.getElementById('pendingSelect').value;
   const title = document.getElementById('titleInput').value.trim();
@@ -84,7 +131,7 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
   const statusEl = document.getElementById('publishStatus');
 
   if (!pendingUploadId || !title || !thumbnailUrl) {
-    statusEl.textContent = 'সব ফিল্ড পূরণ করুন।';
+    statusEl.textContent = 'সব ফিল্ড পূরণ করুন (থাম্বনেইল আপলোড শেষ হওয়া পর্যন্ত অপেক্ষা করুন)।';
     statusEl.className = 'status-msg err';
     return;
   }
@@ -93,7 +140,10 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
     statusEl.textContent = 'পাবলিশ হয়েছে ✅';
     statusEl.className = 'status-msg ok';
     document.getElementById('titleInput').value = '';
-    document.getElementById('thumbInput').value = '';
+    thumbInput.value = '';
+    thumbFileInput.value = '';
+    thumbPreview.classList.remove('show');
+    thumbUploadStatus.textContent = '';
     await init();
   } catch (e) {
     statusEl.textContent = 'সমস্যা হয়েছে: ' + e.message;
