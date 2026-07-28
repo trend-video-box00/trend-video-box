@@ -18,11 +18,14 @@ module.exports = async (req, res) => {
     const { id } = req.query;
     const userId = req.query.userId ? Number(req.query.userId) : null;
 
+    // Helper: check if user has free unlock credits (for green box in UI)
+    async function getFreeCredits(uid) {
+      if (!uid) return 0;
+      const dbUser = await db.collection('users').findOne({ telegramId: uid });
+      return dbUser?.freeUnlockCredits || 0;
+    }
+
     // ---- Single-video mode: /api/videos?id=xxx ----
-    // This is what the watch page (public/watch.js) calls. It was previously
-    // missing entirely, so `id` was silently ignored and the list branch ran
-    // instead — which never returns `data.video`, causing the watch page to
-    // always show "video not found".
     if (id) {
       let objectId;
       try {
@@ -50,12 +53,16 @@ module.exports = async (req, res) => {
         }
       }
 
+      const freeUnlockCredits = await getFreeCredits(userId);
+
       res.status(200).json({
         video: {
           id: v._id,
           title: v.title,
           thumbnailUrl: v.thumbnailUrl,
           lockedUntil,
+          hasFreeCredits: freeUnlockCredits > 0,
+          freeUnlockCredits,
         },
       });
       return;
@@ -83,6 +90,8 @@ module.exports = async (req, res) => {
       }
     }
 
+    const freeUnlockCredits = await getFreeCredits(userId);
+
     const result = videos.map((v) => ({
       id: v._id,
       title: v.title,
@@ -90,7 +99,11 @@ module.exports = async (req, res) => {
       lockedUntil: unlockMap[v._id.toString()] || null,
     }));
 
-    res.status(200).json({ videos: result });
+    res.status(200).json({
+      videos: result,
+      hasFreeCredits: freeUnlockCredits > 0,
+      freeUnlockCredits,
+    });
   } catch (err) {
     console.error('videos.js error:', err);
     res.status(500).json({ error: 'Server error' });
