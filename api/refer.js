@@ -34,6 +34,8 @@ module.exports = async (req, res) => {
     const claims = await db.collection('referral_claims').find({ telegramId: user.id }).toArray();
     const claimedTiers = new Set(claims.map((c) => c.tier));
     const referralCount = dbUser.referralCount || 0;
+    const freeUnlockCredits = dbUser.freeUnlockCredits || 0;
+
     const milestones = REFERRAL_MILESTONES.map((m) => ({
       count: m.count,
       freeVideos: m.freeVideos,
@@ -41,10 +43,16 @@ module.exports = async (req, res) => {
       achieved: referralCount >= m.count,
       claimed: claimedTiers.has(m.count),
     }));
+
+    // Next milestone the user hasn't reached yet (useful for progress UI)
+    const nextMilestone = milestones.find((m) => !m.achieved) || null;
+
     res.status(200).json({
       referralCount,
       balance: dbUser.balance || 0,
-      freeUnlockCredits: dbUser.freeUnlockCredits || 0,
+      freeUnlockCredits,
+      hasFreeCredits: freeUnlockCredits > 0,  // frontend uses this for green/gray box
+      nextMilestone,
       milestones,
     });
   } catch (err) {
