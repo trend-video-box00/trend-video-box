@@ -2,7 +2,7 @@
 // Vercel serverless function: POST target for the Telegram webhook.
 // Set the webhook once (see README) to point here.
 const { getDb } = require('../lib/db');
-const { sendMessage } = require('../lib/telegram');
+const { sendMessage, getUserPhotoUrl } = require('../lib/telegram');
 
 const APP_URL = process.env.APP_URL; // e.g. https://your-project.vercel.app
 const ADMIN_ID = String(process.env.ADMIN_TELEGRAM_ID || '');
@@ -112,6 +112,19 @@ module.exports = async (req, res) => {
           },
           { upsert: true }
         );
+
+        // Fetch and store their current Telegram profile photo (if any) so
+        // the Rank page leaderboard can show real avatars instead of just
+        // initials. This only works because the user just sent /start —
+        // Telegram only lets a bot read profile photos of users who have
+        // interacted with it.
+        const photoUrl = await getUserPhotoUrl(userId);
+        if (photoUrl) {
+          await db.collection('users').updateOne(
+            { telegramId: userId },
+            { $set: { photoUrl } }
+          );
+        }
 
         // First-time visit via a referral link: ?start=ref_<telegramId>
         if (!existing && payload.startsWith('ref_')) {
