@@ -8,12 +8,11 @@
 //
 // A simple, honest leaderboard — no purchasable ranks, no pay-to-climb.
 //
-// NOTE on photos: bot.js currently only saves firstName/username on /start,
-// not a Telegram profile photo, so photoUrl is always null here for now —
-// the frontend already falls back to a first-letter avatar when photoUrl is
-// missing. Showing real photos for OTHER users would need bot.js to call
-// Telegram's getUserProfilePhotos + getFile and store the resulting URL —
-// a separate change, not done here.
+// Profile photos come from users.photoUrl, which api/bot.js populates via
+// Telegram's getUserProfilePhotos + getFile the moment a user sends /start.
+// Users who joined before that change (or who have no profile photo set)
+// will simply have photoUrl: null — the frontend already falls back to a
+// first-letter avatar in that case.
 
 const { getDb } = require('../lib/db');
 
@@ -38,12 +37,12 @@ module.exports = async (req, res) => {
         .find({ balance: { $gt: 0 } })
         .sort({ balance: -1 })
         .limit(LIMIT)
-        .project({ firstName: 1, username: 1, balance: 1 })
+        .project({ firstName: 1, username: 1, balance: 1, photoUrl: 1 })
         .toArray();
       res.status(200).json({
         entries: users.map((u) => ({
           name: displayName(u),
-          photoUrl: null,
+          photoUrl: u.photoUrl || null,
           valueLabel: `$${(u.balance || 0).toFixed(2)}`,
         })),
       });
@@ -56,12 +55,12 @@ module.exports = async (req, res) => {
         .find({ referralCount: { $gt: 0 } })
         .sort({ referralCount: -1 })
         .limit(LIMIT)
-        .project({ firstName: 1, username: 1, referralCount: 1 })
+        .project({ firstName: 1, username: 1, referralCount: 1, photoUrl: 1 })
         .toArray();
       res.status(200).json({
         entries: users.map((u) => ({
           name: displayName(u),
-          photoUrl: null,
+          photoUrl: u.photoUrl || null,
           valueLabel: `${u.referralCount} Refs`,
         })),
       });
@@ -80,17 +79,20 @@ module.exports = async (req, res) => {
       const users = await db
         .collection('users')
         .find({ telegramId: { $in: userIds } })
-        .project({ telegramId: 1, firstName: 1, username: 1, balance: 1 })
+        .project({ telegramId: 1, firstName: 1, username: 1, balance: 1, photoUrl: 1 })
         .toArray();
       const userMap = new Map(users.map((u) => [u.telegramId, u]));
 
       if (type === 'unlocks') {
         res.status(200).json({
-          entries: agg.map((a) => ({
-            name: displayName(userMap.get(a._id)),
-            photoUrl: null,
-            valueLabel: `${a.unlockCount} Unlocks`,
-          })),
+          entries: agg.map((a) => {
+            const u = userMap.get(a._id);
+            return {
+              name: displayName(u),
+              photoUrl: (u && u.photoUrl) || null,
+              valueLabel: `${a.unlockCount} Unlocks`,
+            };
+          }),
         });
       } else {
         res.status(200).json({
@@ -98,7 +100,7 @@ module.exports = async (req, res) => {
             const u = userMap.get(a._id);
             return {
               name: displayName(u),
-              photoUrl: null,
+              photoUrl: (u && u.photoUrl) || null,
               earning: (u && u.balance) || 0,
             };
           }),
