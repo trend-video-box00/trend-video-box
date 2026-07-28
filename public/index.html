@@ -10,17 +10,8 @@
 <body class="page-body">
 
   <header class="topbar">
-    <div class="topbar-left">
-      <div class="header-avatar-btn" id="avatar">💥</div>
-      <div class="topbar-title-wrap">
-        <div class="topbar-title">Trend VideoTube 💥</div>
-        <div class="topbar-sub">mini app</div>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <div class="online-badge"><span class="online-dot"></span>1 ONLINE</div>
-      <button class="header-settings-btn" id="settingsBtn">⚙️</button>
-    </div>
+    <div class="header-avatar-btn" id="avatar">?</div>
+    <button class="header-settings-btn" id="settingsBtn">⚙️</button>
   </header>
 
   <main class="home-wrap">
@@ -32,13 +23,6 @@
       </div>
       <div class="balance-pill">🔔 উইথড্র করুন — সর্বনিম্ন $2.00</div>
     </div>
-
-    <!-- Animated free unlock banner — clicking goes to refer.html -->
-    <a href="refer.html" class="free-unlock-banner">
-      <span class="free-unlock-gift">🎁</span>
-      2+ video Free Unlock — Tap to Refer!
-      <span class="free-unlock-arrow">›</span>
-    </a>
 
     <div class="quick-actions">
       <a href="earn.html" class="quick-action">
@@ -59,13 +43,15 @@
       </a>
     </div>
 
+    <!-- Top Unlocks: who's unlocking videos right now, their position + earning.
+         Populated from /api/rank?type=topUnlocks in app.js. -->
     <div class="top-unlocks-card">
       <div class="top-unlocks-title">Top Unlocks</div>
       <div id="topUnlocksList"></div>
     </div>
   </main>
 
-  <!-- Notification popup -->
+  <!-- Notification popup — shown once per session, with a haptic buzz -->
   <div class="notif-overlay" id="notifOverlay" hidden>
     <div class="notif-card">
       <div class="notif-icon">🔔</div>
@@ -78,7 +64,8 @@
     </div>
   </div>
 
-  <!-- Settings modal -->
+  <!-- Settings modal (Language + Currency) — auto-opens for brand-new users,
+       reopenable any time via the header gear icon. -->
   <div class="modal-overlay" id="settingsOverlay" hidden>
     <div class="modal-sheet">
       <button class="modal-close" id="settingsCloseBtn">✕</button>
