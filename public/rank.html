@@ -9,11 +9,22 @@
 </head>
 <body class="page-body">
   <header class="topbar">
-    <div class="brand">Trending <span>Hub</span></div>
+    <div class="header-avatar-btn" id="avatar">?</div>
+    <a href="index.html#settings" class="header-settings-btn">⚙️</a>
   </header>
 
   <main class="home-wrap">
-    <div class="section-title" style="margin-top:6px;">Top Referrers 🏆</div>
+    <div class="rank-hero">
+      <div class="rank-hero-title">Top Champions</div>
+      <div class="rank-hero-sub">Stay ahead and earn more!</div>
+    </div>
+
+    <div class="rank-tabs">
+      <div class="rank-tab active" data-type="earners">Top Earners</div>
+      <div class="rank-tab" data-type="refs">Top Refs</div>
+      <div class="rank-tab" data-type="unlocks">Top Unlocks</div>
+    </div>
+
     <div id="rankList"></div>
   </main>
 
