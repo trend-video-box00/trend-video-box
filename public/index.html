@@ -6,120 +6,22 @@
 <title>Trending Hub</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="style.css" />
-<style>
-  /* Redesigned balance card + quick-action buttons — same content/links as
-     before, just restyled to look like dark glowing boxes. */
-  .balance-card {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(160deg, #1a1010 0%, #120c0c 100%);
-    border: 1px solid rgba(255, 90, 90, 0.15);
-    border-radius: 18px;
-    padding: 20px;
-  }
-  .balance-card::after {
-    content: '';
-    position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(239,75,75,0.25), transparent 70%);
-  }
-  .balance-label { font-size: .8rem; opacity: .65; }
-  .balance-value { font-size: 2rem; font-weight: 800; margin: 6px 0 4px; }
-  .balance-hint { font-size: .72rem; opacity: .55; }
-
-  /* --- New: floating "+2 Video Free Unlock" badge --- */
-  .free-unlock-wrap {
-    display: flex;
-    justify-content: center;
-    margin: 14px 0 4px;
-  }
-  .free-unlock-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    border-radius: 999px;
-    text-decoration: none;
-    color: #fff;
-    font-size: .85rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #ff5a5a, #ff8a3d);
-    box-shadow: 0 0 18px rgba(255, 90, 90, 0.45), 0 4px 10px rgba(0,0,0,0.35);
-    animation: freeUnlockFloat 1.8s ease-in-out infinite;
-    white-space: nowrap;
-  }
-  .free-unlock-badge .fu-icon {
-    font-size: 1rem;
-    animation: freeUnlockSpin 2.4s ease-in-out infinite;
-  }
-  @keyframes freeUnlockFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-  @keyframes freeUnlockSpin {
-    0%, 100% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(-10deg) scale(1.15); }
-  }
-
-  .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin: 18px 0;
-  }
-  .quick-action {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 6px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
-    text-decoration: none;
-    color: inherit;
-    text-align: center;
-  }
-  .qa-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    background: rgba(239,75,75,0.12);
-    box-shadow: 0 0 16px rgba(239,75,75,0.15);
-  }
-  .qa-label { font-size: .72rem; opacity: .8; }
-</style>
 </head>
 <body class="page-body">
 
   <header class="topbar">
-    <div class="brand">Trending <span>Hub</span></div>
-    <div class="user-chip" id="userChip">
-      <span id="userName">···</span>
-      <div class="avatar" id="avatar">?</div>
-    </div>
+    <div class="header-avatar-btn" id="avatar">?</div>
+    <button class="header-settings-btn" id="settingsBtn">⚙️</button>
   </header>
 
   <main class="home-wrap">
     <div class="balance-card">
       <div class="balance-label">Total Balance</div>
-      <div class="balance-value">$<span id="balanceValue">0.00</span></div>
-      <div class="balance-hint">সর্বনিম্ন উইথড্র $2.00 — bKash / Nagad / Rocket</div>
-    </div>
-
-    <div class="free-unlock-wrap">
-      <a href="refer.html" class="free-unlock-badge">
-        <span class="fu-icon">🔓</span>
-        <span>+2 Video Free Unlock</span>
-      </a>
+      <div class="balance-value"><span class="cur-symbol">$</span><span id="balanceValue">0.00</span></div>
+      <div class="balance-progress-track">
+        <div class="balance-progress-fill" id="balanceProgressFill" style="width:0%"></div>
+      </div>
+      <div class="balance-pill">🔔 উইথড্র করুন — সর্বনিম্ন $2.00</div>
     </div>
 
     <div class="quick-actions">
@@ -141,13 +43,11 @@
       </a>
     </div>
 
-    <div class="section-title">Watch &amp; Earn</div>
-    <div class="task-item">
-      <div class="task-info">
-        <div class="task-title">অ্যাড দেখে সরাসরি আয় করুন</div>
-        <div class="task-reward">$0.05 / ad</div>
-      </div>
-      <a href="earn.html" class="task-btn">যান</a>
+    <!-- Top Unlocks: who's unlocking videos right now, their position + earning.
+         Populated from /api/rank?type=topUnlocks in app.js. -->
+    <div class="top-unlocks-card">
+      <div class="top-unlocks-title">Top Unlocks</div>
+      <div id="topUnlocksList"></div>
     </div>
   </main>
 
@@ -164,6 +64,30 @@
     </div>
   </div>
 
+  <!-- Settings modal (Language + Currency) — auto-opens for brand-new users,
+       reopenable any time via the header gear icon. -->
+  <div class="modal-overlay" id="settingsOverlay" hidden>
+    <div class="modal-sheet">
+      <button class="modal-close" id="settingsCloseBtn">✕</button>
+      <div class="modal-title">Settings</div>
+      <div class="field">
+        <label>Language</label>
+        <div class="settings-option-row">
+          <div class="settings-option" id="langBn" data-lang="bn">বাংলা</div>
+          <div class="settings-option" id="langEn" data-lang="en">English</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Currency</label>
+        <div class="settings-option-row">
+          <div class="settings-option" id="curUsd" data-cur="USD">USD ($)</div>
+          <div class="settings-option" id="curBdt" data-cur="BDT">BDT (৳)</div>
+        </div>
+      </div>
+      <button class="admin-btn" id="settingsSaveBtn" style="width:100%;">Save</button>
+    </div>
+  </div>
+
   <!-- Withdraw modal -->
   <div class="modal-overlay" id="withdrawOverlay" hidden>
     <div class="modal-sheet">
@@ -175,7 +99,7 @@
       </div>
       <div class="field">
         <label>পেমেন্ট মেথড</label>
-        <select id="withdrawMethod" style="width:100%; background:#0f1712; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px; color:var(--text); font-size:13px;">
+        <select id="withdrawMethod" style="width:100%; background:#f5f6fb; border:1px solid #e2e4f0; border-radius:8px; padding:10px; color:var(--text); font-size:13px;">
           <option value="bKash">bKash</option>
           <option value="Nagad">Nagad</option>
           <option value="Rocket">Rocket</option>
