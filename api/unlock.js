@@ -46,6 +46,7 @@ module.exports = async (req, res) => {
       res.status(404).json({ error: 'Video not found' });
       return;
     }
+
     // Enforce 24h re-lock per user per video — applies whether or not a
     // free credit is used.
     const existing = await db.collection('unlocks').findOne({ userId, videoId: videoId });
@@ -63,16 +64,21 @@ module.exports = async (req, res) => {
       // Atomic check-and-decrement: only succeeds if the user still has at
       // least 1 credit at the moment of the update, so two rapid clicks
       // can't both spend the same credit.
-      const creditResult = await db.collection('users').findOneAndUpdate(
+      //
+      // FIX: MongoDB Node.js driver v4+ returns the document directly from
+      // findOneAndUpdate (not wrapped in { value: doc }). The old code used
+      // creditResult.value which was always undefined → always failed even
+      // when the user had credits, so the video was never sent to inbox.
+      const updatedUser = await db.collection('users').findOneAndUpdate(
         { telegramId: userId, freeUnlockCredits: { $gte: 1 } },
         { $inc: { freeUnlockCredits: -1 } },
         { returnDocument: 'after' }
       );
-      if (!creditResult.value) {
+      if (!updatedUser) {
         res.status(400).json({ error: 'আপনার কোনো ফ্রি ভিডিও credit নেই।' });
         return;
       }
-      remainingFreeCredits = creditResult.value.freeUnlockCredits;
+      remainingFreeCredits = updatedUser.freeUnlockCredits;
     }
 
     // Send the video into the user's chat with the bot.
