@@ -46,12 +46,13 @@ async function loadRank() {
     rankList.innerHTML = entries.map((u, i) => {
       const pos = i + 1;
       const posClass = pos === 1 ? 'top1' : pos === 2 ? 'top2' : pos === 3 ? 'top3' : '';
+      const posDisplay = pos === 1 ? '👑' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
       const avatarHtml = u.photoUrl
         ? `<img src="${u.photoUrl}" alt="" />`
         : (u.name || '?')[0].toUpperCase();
       return `
         <div class="rank-item ${posClass}">
-          <div class="rank-pos ${posClass}">${pos}</div>
+          <div class="rank-pos ${posClass}">${posDisplay}</div>
           <div class="rank-avatar">${avatarHtml}</div>
           <div class="rank-name">${escapeHtml(u.name)}</div>
           <div class="rank-value">${escapeHtml(u.valueLabel)}</div>
