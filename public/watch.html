@@ -11,17 +11,10 @@
 <script src='//libtl.com/sdk.js' data-zone='11415029' data-sdk='show_11415029'></script>
 <link rel="stylesheet" href="style.css" />
 <style>
-  /* Thumbnail frame: fixed aspect ratio, no broken-image icon, shimmer while loading */
-  #unlockCard .wc-thumb-wrap {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    border-radius: 12px;
-    background: #10241b;
-  }
+  /* Thumbnail: black placeholder + shimmer while loading, matches the
+     reference's black thumbnail area exactly until our real image loads. */
   #unlockCard .wc-thumb-wrap.skeleton {
-    background: linear-gradient(90deg, #10241b 25%, #16352a 37%, #10241b 63%);
+    background: linear-gradient(90deg, #0d0a06 25%, #1c1710 37%, #0d0a06 63%);
     background-size: 400% 100%;
     animation: wc-shimmer 1.4s ease infinite;
   }
@@ -41,13 +34,13 @@
   #unlockCard .wc-thumb-wrap img.loaded {
     opacity: 1;
   }
-  /* Title: shimmer bar while loading, replaced by real text once loaded */
+  /* Title: shimmer bar while loading (dark-on-yellow), replaced by real text */
   #unlockCard .wc-title.skeleton {
     display: inline-block;
     width: 60%;
     height: 1em;
     border-radius: 6px;
-    background: linear-gradient(90deg, #1c1c1c 25%, #2a2a2a 37%, #1c1c1c 63%);
+    background: linear-gradient(90deg, rgba(26,19,0,0.18) 25%, rgba(26,19,0,0.3) 37%, rgba(26,19,0,0.18) 63%);
     background-size: 400% 100%;
     animation: wc-shimmer 1.4s ease infinite;
     color: transparent;
@@ -62,13 +55,16 @@
     </div>
     <div class="wc-title skeleton" id="wcTitle">&nbsp;</div>
     <div class="wc-progress-box">
-      <span id="wcProgressText">Watch 0/5</span>
+      <span id="wcProgressText">Watched: 0 / 5</span>
     </div>
     <div class="wc-hint">ভিডিওটি আনলক করতে সম্পূর্ণ অ্যাডটি দেখুন।</div>
-    <button class="unlock-btn" id="unlockBtn">🔓 Watch AD to Unlock</button>
-    <button class="unlock-btn" id="freeCreditBtn" hidden style="margin-top:8px; background:#16352a; border:1px solid rgba(56,224,123,.4);">
-      🎁 Free Credit দিয়ে Unlock করুন
-    </button>
+
+    <!-- Free-credit CTA: green + skips ads directly when credits are
+         available; gray + routes to Refer when there are none. Always
+         visible (never hidden), per the reference design. -->
+    <button class="wc-btn-free gray" id="freeCreditBtn">🎁 +2 Free Videos Unlocked</button>
+
+    <button class="wc-btn-dark" id="unlockBtn">▶ Watch Ad</button>
   </div>
 
   <div id="loadingState" class="watch-loading" hidden>
