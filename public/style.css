@@ -510,7 +510,7 @@ body {
   gap: 4px;
   padding: 6px 0 4px;
   text-decoration: none;
-  color: rgba(255,255,255,0.75);
+  color: var(--gold);
   font-size: 11px;
   font-weight: 600;
   border-radius: 12px;
@@ -519,6 +519,15 @@ body {
 .nav-item .nav-icon {
   font-size: 19px;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nav-item .nav-icon svg {
+  width: 21px;
+  height: 21px;
+  display: block;
+  fill: currentColor;
 }
 .nav-item.active {
   color: #fff;
@@ -530,12 +539,17 @@ body {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transform: translateY(-14px);
-  box-shadow: 0 0 0 6px rgba(255,255,255,0.15), 0 6px 16px rgba(20,20,60,0.3), 0 0 18px rgba(224,56,79,0.55);
   margin-bottom: -10px;
+  animation: nav-active-glow 2s ease-in-out infinite;
+}
+@keyframes nav-active-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.15), 0 6px 16px rgba(20,20,60,0.3), 0 0 14px rgba(224,56,79,0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255,255,255,0.2), 0 6px 18px rgba(20,20,60,0.32), 0 0 22px rgba(224,56,79,0.75);
+  }
 }
 .page-body { padding-bottom: 92px; }
 
@@ -591,6 +605,24 @@ body {
   font-size: 13px;
   font-weight: 700;
   color: #fff;
+}
+
+.free-credit-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--green-glow);
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  animation: free-credit-pulse 1.8s ease-in-out infinite;
+}
+@keyframes free-credit-pulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
 }
 
 .quick-actions {
@@ -852,7 +884,7 @@ body {
 .rank-pos {
   width: 28px; height: 28px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 12.5px; background: #eceefa; color: var(--text-dim);
+  font-weight: 800; font-size: 15px; background: #eceefa; color: var(--text-dim);
   flex-shrink: 0;
 }
 .rank-pos.top1 { background: #f0d98a; color: #6b4f00; }
@@ -891,40 +923,79 @@ body {
   text-align: center;
   padding: 20px;
 }
+/* Watch page — yellow unlock box, matching the reference design */
+.unlock-card-v2 {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(160deg, #ffd23f, #f7b733);
+  border-radius: 22px;
+  box-shadow: 0 14px 30px rgba(247,183,51,0.35);
+}
 .wc-thumb-wrap {
   width: 100%;
-  aspect-ratio: 1/1;
-  border-radius: 18px;
+  aspect-ratio: 16/9;
+  border-radius: 14px;
   overflow: hidden;
-  background: #e6e8f2;
+  background: #14100a;
   margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(20,20,40,0.12);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 .wc-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .wc-title {
   font-size: 18px;
   font-weight: 800;
-  color: var(--text);
+  color: #1a1300;
   margin-bottom: 14px;
   line-height: 1.4;
 }
 .wc-progress-box {
   display: inline-block;
-  background: #f5f6fb;
-  border: 1px solid #e2e4f0;
+  background: #1a1300;
+  border: none;
   border-radius: 999px;
   padding: 6px 18px;
   font-size: 14px;
   font-weight: 700;
-  color: var(--gold);
+  color: #ffd23f;
   margin-bottom: 12px;
 }
 .wc-hint {
   font-weight: 700;
   font-size: 13.5px;
-  color: var(--text);
+  color: #3a2b00;
   margin-bottom: 18px;
 }
+.wc-btn-dark {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: #1a1300;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+}
+.wc-btn-dark:disabled { opacity: 0.6; cursor: not-allowed; }
+.wc-btn-free {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.wc-btn-free.green { background: var(--green-glow); color: #fff; }
+.wc-btn-free.gray { background: #9a9690; color: #f2f0e8; }
 .watch-loading {
   min-height: 100vh;
   display: flex;
