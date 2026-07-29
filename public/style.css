@@ -151,10 +151,10 @@ body {
 .search::placeholder { color: var(--text-dim); }
 
 .grid {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  padding: 4px 16px 24px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 4px 12px 24px;
 }
 
 .card {
@@ -215,31 +215,32 @@ body {
 
 .card-footer {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-}
-.db-logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--red);
-  color: #fff;
-  font-weight: 800;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px 10px 10px;
 }
 .card-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-watch-link {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--blue-glow);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .skeleton {
-  height: 170px;
+  height: 140px;
   border-radius: var(--radius);
   background: linear-gradient(100deg, #e9ebf5 30%, #f5f6fb 50%, #e9ebf5 70%);
   background-size: 200% 100%;
