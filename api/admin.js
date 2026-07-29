@@ -26,6 +26,7 @@ const cloudinary = require('cloudinary').v2;
 
 const ADMIN_ID = Number(process.env.ADMIN_TELEGRAM_ID || 0);
 const BOT_USERNAME = process.env.BOT_USERNAME || '';
+const APP_URL = process.env.APP_URL; // e.g. https://your-project.vercel.app
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -37,6 +38,34 @@ function requireAdmin(initData) {
   const user = verifyInitData(initData);
   if (!user || user.id !== ADMIN_ID) return null;
   return user;
+}
+
+// Sent automatically to every user the moment a new video is published.
+// The "Unlock Full videos" button is a web_app button, so tapping it opens
+// the Mini App straight to that video's watch/unlock page.
+async function broadcastNewVideo(db, video, videoId) {
+  const users = await db.collection('users').find({}).project({ telegramId: 1 }).toArray();
+  const caption =
+    `Dear friends, don't miss the video! 🎬\n` +
+    `Watch Now!\n\n` +
+    `Title: ${video.title}\n\n` +
+    `Watch the video and earn a lot!`;
+  const watchUrl = `${APP_URL}/watch.html?id=${videoId}`;
+  const replyMarkup = {
+    inline_keyboard: [[{ text: '🔓 Unlock Full videos', web_app: { url: watchUrl } }]],
+  };
+
+  let sent = 0;
+  let failed = 0;
+  for (const u of users) {
+    try {
+      await sendPhoto(u.telegramId, video.thumbnailUrl, caption, { reply_markup: replyMarkup });
+      sent++;
+    } catch {
+      failed++;
+    }
+  }
+  return { sent, failed, total: users.length };
 }
 
 module.exports = async (req, res) => {
@@ -95,7 +124,7 @@ module.exports = async (req, res) => {
         res.status(404).json({ error: 'Pending upload not found' });
         return;
       }
-      await db.collection('videos').insertOne({
+      const inserted = await db.collection('videos').insertOne({
         title,
         thumbnailUrl,
         telegramFileId: pending.fileId,
@@ -103,7 +132,21 @@ module.exports = async (req, res) => {
         createdAt: new Date(),
       });
       await db.collection('pending_uploads').updateOne({ _id: pending._id }, { $set: { published: true } });
-      res.status(200).json({ success: true });
+
+      // Announce the new video to everyone, with a button that opens the
+      // Mini App straight to its unlock page.
+      let broadcastResult = { sent: 0, failed: 0, total: 0 };
+      if (APP_URL) {
+        broadcastResult = await broadcastNewVideo(
+          db,
+          { title, thumbnailUrl },
+          inserted.insertedId.toString()
+        );
+      } else {
+        console.warn('publishVideo: APP_URL not set, skipped the new-video broadcast');
+      }
+
+      res.status(200).json({ success: true, broadcast: broadcastResult });
       return;
     }
 
