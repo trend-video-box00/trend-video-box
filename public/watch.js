@@ -47,11 +47,14 @@ function showAdLoading() {
   if (loadingState) loadingState.hidden = false;
 }
 function updateProgress() {
-  if (wcProgressText) wcProgressText.textContent = `Watch ${watchedCount}/${ADS_REQUIRED}`;
+  if (wcProgressText) wcProgressText.textContent = `Watched: ${watchedCount} / ${ADS_REQUIRED}`;
 }
 
 // Checks how many free video-unlock credits (earned via referrals) the
-// user currently has, and shows/hides the "use free credit" button.
+// user currently has. The button is always visible: green + skips ads
+// directly when credits are available, gray + routes to Refer when there
+// are none (per the reference design).
+let hasFreeCredit = false;
 async function loadFreeCredits() {
   if (!freeCreditBtn) return;
   try {
@@ -59,14 +62,12 @@ async function loadFreeCredits() {
     const data = await res.json();
     if (!res.ok) return;
     const credits = data.freeUnlockCredits || 0;
-    if (credits > 0) {
-      freeCreditBtn.hidden = false;
-      freeCreditBtn.textContent = `🎁 Free Credit দিয়ে Unlock করুন (${credits} বাকি)`;
-    } else {
-      freeCreditBtn.hidden = true;
-    }
+    hasFreeCredit = credits > 0;
+    freeCreditBtn.classList.toggle('green', hasFreeCredit);
+    freeCreditBtn.classList.toggle('gray', !hasFreeCredit);
   } catch (e) {
-    // Free-credit button just stays hidden if this fails — not critical.
+    // Stays gray (routes to Refer) if this fails — safe default.
+    hasFreeCredit = false;
   }
 }
 
@@ -246,7 +247,13 @@ if (!videoId) {
   showError('ভিডিও খুঁজে পাওয়া যায়নি।');
 } else {
   unlockBtn.addEventListener('click', watchOneAd);
-  freeCreditBtn?.addEventListener('click', () => completeUnlock(true));
+  freeCreditBtn?.addEventListener('click', () => {
+    if (hasFreeCredit) {
+      completeUnlock(true);
+    } else {
+      window.location.href = 'refer.html';
+    }
+  });
   loadVideoInfo();
 }
 document.getElementById('checkInboxBtn')?.addEventListener('click', () => {
