@@ -4,7 +4,6 @@ tg?.ready();
 tg?.expand();
 const user = tg?.initDataUnsafe?.user;
 if (user) {
-  document.getElementById('userName').textContent = user.first_name || user.username || 'User';
   const avatarEl = document.getElementById('avatar');
   if (user.photo_url) {
     avatarEl.innerHTML = `<img src="${user.photo_url}" alt="" />`;
@@ -44,8 +43,8 @@ function render(videos) {
           </div>` : ''}
       </div>
       <div class="card-footer">
-        <div class="db-logo">TH</div>
         <div class="card-title">${escapeHtml(v.title)}</div>
+        ${locked ? '' : '<div class="card-watch-link">▶ Watch Ad to Unlock</div>'}
       </div>
     `;
     const thumbWrap = card.querySelector('.thumb-wrap');
