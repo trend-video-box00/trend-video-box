@@ -936,6 +936,7 @@ body {
   box-shadow: 0 14px 30px rgba(247,183,51,0.35);
 }
 .wc-thumb-wrap {
+  position: relative;
   width: 100%;
   aspect-ratio: 16/9;
   border-radius: 14px;
